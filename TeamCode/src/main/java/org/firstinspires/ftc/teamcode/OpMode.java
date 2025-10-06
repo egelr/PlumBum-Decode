@@ -39,7 +39,7 @@ public class OpMode extends LinearOpMode {
     private static final int MAX_TICKS_PER_SEC = (MAX_RPM / 60) * CPR;  // ~2800
 
     // Start at ~70% power
-    private double targetVelocity = MAX_TICKS_PER_SEC * 0;
+    private double targetVelocity = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -54,14 +54,12 @@ public class OpMode extends LinearOpMode {
         fR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         bL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         bR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+
         //Creating the Mecanum Drivetrain
         MecanumDrive drive = new MecanumDrive(fL, fR, bL, bR);
 
-        Servo transferBoxServo = hardwareMap.get(Servo.class, "transferBoxServo");
-
-
+        //Creating subsystem Motors
         intakeMotor = new Motor(hardwareMap, "intakeMotor", Motor.GoBILDA.RPM_1150);
-
         shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
         shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
 
@@ -71,6 +69,8 @@ public class OpMode extends LinearOpMode {
         shooterLeft.setVelocityPIDFCoefficients(0.01, 0.0, 0.001, 11.7);
         shooterRight.setVelocityPIDFCoefficients(0.01, 0.0, 0.001, 11.7);
 
+        //Creating Servos
+        Servo transferBoxServo = hardwareMap.get(Servo.class, "transferBoxServo");
 
         ElapsedTime timer = new ElapsedTime();
 
@@ -104,7 +104,9 @@ public class OpMode extends LinearOpMode {
                 sleep(100);
                 transferBoxServo.setPosition(1);
             }
-
+            if(gamepad1.cross){
+                targetVelocity = MAX_TICKS_PER_SEC * 0.5;
+            }
             if (gamepad1.dpad_up) {
                 targetVelocity += 50;  // increase by 50 ticks/sec
             }
