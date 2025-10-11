@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -38,17 +39,18 @@ public class OpMode extends LinearOpMode {
     private static final int MAX_RPM = 6000;
     private static final int MAX_TICKS_PER_SEC = (MAX_RPM / 60) * CPR;  // ~2800
 
-    // Start at ~70% power
+    // Start at 0% power
     private double targetVelocity = 0;
+    private double targetVelocity1 = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
         //Creating Drivetrain Motors and Setting their behaviour to "brake"
-        fL = new Motor(hardwareMap, "leftFront", Motor.GoBILDA.RPM_312);
-        fR = new Motor(hardwareMap, "rightFront", Motor.GoBILDA.RPM_312);
-        bL = new Motor(hardwareMap, "leftBack", Motor.GoBILDA.RPM_312);
-        bR = new Motor(hardwareMap, "rightBack", Motor.GoBILDA.RPM_312);
+        fL = new Motor(hardwareMap, "leftFront", Motor.GoBILDA.RPM_435);
+        fR = new Motor(hardwareMap, "rightFront", Motor.GoBILDA.RPM_435);
+        bL = new Motor(hardwareMap, "leftBack", Motor.GoBILDA.RPM_435);
+        bR = new Motor(hardwareMap, "rightBack", Motor.GoBILDA.RPM_435);
 
         fL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         fR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
@@ -59,18 +61,24 @@ public class OpMode extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(fL, fR, bL, bR);
 
         //Creating subsystem Motors
-        intakeMotor = new Motor(hardwareMap, "intakeMotor", Motor.GoBILDA.RPM_1150);
+        intakeMotor = new Motor(hardwareMap, "intakeMotor", Motor.GoBILDA.RPM_435);
         shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
         shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
 
         shooterRight.setDirection(DcMotor.Direction.REVERSE);
+        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // PIDF coefficients tuned for 6000 RPM
-        shooterLeft.setVelocityPIDFCoefficients(0.01, 0.0, 0.001, 11.7);
-        shooterRight.setVelocityPIDFCoefficients(0.01, 0.0, 0.001, 11.7);
+        shooterLeft.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
+        shooterRight.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
 
         //Creating Servos
         Servo transferBoxServo = hardwareMap.get(Servo.class, "transferBoxServo");
+        Servo transferBlockServo = hardwareMap.get(Servo.class, "transferBlockServo");
+
 
         ElapsedTime timer = new ElapsedTime();
 
@@ -95,28 +103,50 @@ public class OpMode extends LinearOpMode {
             }
             if (gamepad1.triangle) {
                 intakeMotor.set(1);
+                transferBlockServo.setPosition(0.6);
             }
             if (gamepad1.circle) {
                 intakeMotor.set(0);
+                transferBlockServo.setPosition(0.30);
+            }
+            if(gamepad1.left_bumper){
+                intakeMotor.set(-1);
+                transferBlockServo.setPosition(0.6);
             }
             if (gamepad1.square) {
-                transferBoxServo.setPosition(0.5);
-                sleep(100);
-                transferBoxServo.setPosition(1);
+                transferBoxServo.setPosition(0);
+                sleep(200);
+                transferBoxServo.setPosition(0.88);
+            }
+            if (gamepad1.square) {
+                transferBlockServo.setPosition(0.1);
+                sleep(150);
             }
             if(gamepad1.cross){
-                targetVelocity = MAX_TICKS_PER_SEC * 0.5;
+                targetVelocity = MAX_TICKS_PER_SEC * 0.34;
             }
             if (gamepad1.dpad_up) {
-                targetVelocity += 50;  // increase by 50 ticks/sec
+                targetVelocity += 5;  // increase by 50 ticks/sec
             }
             if (gamepad1.dpad_down) {
-                targetVelocity -= 50;  // decrease by 50 ticks/sec
+                targetVelocity -= 5;  // decrease by 50 ticks/sec
+            }
+            if(gamepad1.share){
+                transferBlockServo.setPosition(0.6);
+            }
+            if(gamepad1.options){
+                transferBlockServo.setPosition(0.30);
             }
 
             // Clamp target
             targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
 
+            /*if(targetVelocity > 0){
+                targetVelocity1 = targetVelocity + 80;
+            }
+            else{
+                targetVelocity1 = 0;
+            }*/
             // Apply velocity
             shooterLeft.setVelocity(targetVelocity);
             shooterRight.setVelocity(targetVelocity);
