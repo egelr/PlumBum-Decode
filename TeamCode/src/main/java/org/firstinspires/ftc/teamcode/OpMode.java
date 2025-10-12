@@ -118,18 +118,14 @@ public class OpMode extends LinearOpMode {
                 sleep(200);
                 transferBoxServo.setPosition(0.88);
             }
-            if (gamepad1.square) {
-                transferBlockServo.setPosition(0.1);
-                sleep(150);
-            }
             if(gamepad1.cross){
-                targetVelocity = MAX_TICKS_PER_SEC * 0.34;
+                targetVelocity = MAX_TICKS_PER_SEC * 0.329;
             }
             if (gamepad1.dpad_up) {
-                targetVelocity += 5;  // increase by 50 ticks/sec
+                targetVelocity += 1;  // increase by 50 ticks/sec
             }
             if (gamepad1.dpad_down) {
-                targetVelocity -= 5;  // decrease by 50 ticks/sec
+                targetVelocity -= 1;  // decrease by 50 ticks/sec
             }
             if(gamepad1.share){
                 transferBlockServo.setPosition(0.6);

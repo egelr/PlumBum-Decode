@@ -33,7 +33,8 @@ public class CameraTest extends LinearOpMode {
     private double distanceM = -1;
     private int currentTagId = -1;
     private boolean tagVisible = false;
-    private double K = 0.6;
+    private double K = 0.172;
+    private double AreaSQR;
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -52,7 +53,7 @@ public class CameraTest extends LinearOpMode {
 
         // === PID Controller ===
         turnPID = new PIDController(kP, kI, kD);
-        turnPID.setTolerance(3.0); // degrees
+        turnPID.setTolerance(1.0); // degrees
 
         telemetry.addLine("Ready — Press START");
         telemetry.update();
@@ -77,6 +78,7 @@ public class CameraTest extends LinearOpMode {
                         tagVisible = true;
                         currentTagId = id;
                         tx = fiducial.getTargetXDegrees();
+                        AreaSQR = Math.sqrt(fiducial.getTargetArea());
                         distanceM =  K /Math.sqrt(fiducial.getTargetArea());
                         }
                         break; // first valid tag
@@ -107,6 +109,7 @@ public class CameraTest extends LinearOpMode {
             telemetry.addData("Tag Visible", tagVisible);
             telemetry.addData("Tag ID", currentTagId);
             telemetry.addData("tx (° offset)", "%.2f", tx);
+            telemetry.addData("Area SQR", "%.6f", AreaSQR);
             telemetry.addData("Forward Distance (m)", "%.4f", distanceM);
             telemetry.addData("PID At Setpoint", turnPID.atSetPoint());
             telemetry.addLine("-----------------------------");
