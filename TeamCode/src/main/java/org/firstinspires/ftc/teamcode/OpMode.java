@@ -107,7 +107,7 @@ public class OpMode extends LinearOpMode {
             }
             if (gamepad1.circle) {
                 intakeMotor.set(0);
-                transferBlockServo.setPosition(0.30);
+                transferBlockServo.setPosition(0.38);
             }
             if(gamepad1.left_bumper){
                 intakeMotor.set(-1);

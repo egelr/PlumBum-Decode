@@ -2,160 +2,130 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes.FiducialResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.Range;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.LLFieldMap;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import java.util.List;
 
-@TeleOp(name="Camera Test")
-public class CameraTest extends OpMode {
+@TeleOp(name = "CameraTest", group = "Vision")
+public class CameraTest extends LinearOpMode {
 
-    // --- Drivetrain ---
-    private Motor fL, fR, bL, bR;
     private MecanumDrive drive;
-
-    // --- Limelight 3A ---
     private Limelight3A limelight;
+    private PIDController turnPID;
 
-    // --- FTCLib PID (turn only) ---
-    private final PIDController turnPID = new PIDController(0.02, 0.0, 0.002);
+    // PID constants (tune as needed)
+    private static final double kP = 0.1;
+    private static final double kI = 0.0;
+    private static final double kD = 0.02;
+    private static final double MIN_TURN_POWER = 0.1;
 
-    // --- Constants ---
-    private static final double TX_TARGET = 0.0; // Center horizontally
-    private static final double MAX_TURN = 0.5;
-    private static final double TX_TOL_DEG = 1.0;
-
-    private enum Mode { MANUAL, ALIGNING }
-    private Mode mode = Mode.MANUAL;
-
-    // Latest vision data for telemetry
+    private double tx = 0.0;
+    private double distanceM = -1;
+    private int currentTagId = -1;
     private boolean tagVisible = false;
-    private int seenTagId = -1;
-    private double tx = 0, ty = 0, ta = 0;
-    private Double planar_m = null;
-    private long stalenessMs = -1;
-
+    private double K = 0.6;
     @Override
-    public void init() {
-        // Motors: GoBILDA 435 RPM, BRAKE
-        fL = new Motor(hardwareMap, "leftFront",  Motor.GoBILDA.RPM_435);
-        fR = new Motor(hardwareMap, "rightFront", Motor.GoBILDA.RPM_435);
-        bL = new Motor(hardwareMap, "leftBack",   Motor.GoBILDA.RPM_435);
-        bR = new Motor(hardwareMap, "rightBack",  Motor.GoBILDA.RPM_435);
+    public void runOpMode() throws InterruptedException {
 
-        fL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        fR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        bL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        bR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        // === Initialize drivetrain ===
+        MotorEx frontLeft  = new MotorEx(hardwareMap, "leftFront");
+        MotorEx frontRight = new MotorEx(hardwareMap, "rightFront");
+        MotorEx backLeft   = new MotorEx(hardwareMap, "leftBack");
+        MotorEx backRight  = new MotorEx(hardwareMap, "rightBack");
 
-        // No inversion — use default rotation directions
-        drive = new MecanumDrive(fL, fR, bL, bR);
+        drive = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
 
-        // Limelight
+        // === Initialize Limelight ===
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100);
+        limelight.pipelineSwitch(0);
         limelight.start();
 
-        // PID setup
-        turnPID.setSetPoint(TX_TARGET);
-        turnPID.setTolerance(TX_TOL_DEG);
+        // === PID Controller ===
+        turnPID = new PIDController(kP, kI, kD);
+        turnPID.setTolerance(3.0); // degrees
 
-        telemetry.addLine("Init OK. Hold SQUARE to turn-align to Tag 20/24. Planar distance shown when visible.");
-    }
-
-    @Override
-    public void loop() {
-        boolean square = gamepad1.square;
-        if (square) mode = Mode.ALIGNING;
-        else if (mode == Mode.ALIGNING) mode = Mode.MANUAL;
-
-        // Always read vision and show telemetry when visible
-        readVisionAndPrepareTelemetry();
-
-        if (mode == Mode.ALIGNING && tagVisible) {
-            // PID correction applied to rotation (rx), not strafe
-            double turnCmd = clamp(turnPID.calculate(tx), -MAX_TURN, MAX_TURN);
-            drive.driveRobotCentric(0.0, 0.0, turnCmd);
-
-            telemetry.addData("Mode", "ALIGNING (hold □)");
-            telemetry.addData("cmd turn", "%.2f", turnCmd);
-
-            if (turnPID.atSetPoint()) gamepad1.rumble(100);
-        } else if (mode == Mode.MANUAL) {
-            double y  = -gamepad1.left_stick_y;
-            double x  =  gamepad1.left_stick_x;
-            double rx =  gamepad1.right_stick_x;
-            drive.driveRobotCentric(x, y, rx);
-            telemetry.addData("Mode", "MANUAL");
-        } else {
-            drive.stop();
-            telemetry.addData("Mode", "ALIGNING (hold □)");
-        }
-
-        // Telemetry if tag visible
-        if (tagVisible) {
-            boolean alignedHoriz = Math.abs(tx - TX_TARGET) <= TX_TOL_DEG;
-            telemetry.addData("Tag 20/24 visible", true);
-            telemetry.addData("Tag ID", seenTagId);
-            telemetry.addData("tx / ty / ta", "%.2f / %.2f / %.2f", tx, ty, ta);
-            telemetry.addData("Aligned (turn)", alignedHoriz);
-            if (planar_m != null) {
-                telemetry.addData("Planar distance (m)", "%.3f", planar_m);
-                telemetry.addData("Planar distance (cm)", "%.1f", planar_m * 100.0);
-            }
-            telemetry.addData("staleness (ms)", stalenessMs);
-        } else {
-            telemetry.addData("Tag 20/24 visible", false);
-        }
-
+        telemetry.addLine("Ready — Press START");
         telemetry.update();
-    }
 
-    /** Reads Limelight, selects first tag 20/24, caches values for telemetry (always runs). */
-    private void readVisionAndPrepareTelemetry() {
-        tagVisible = false;
-        seenTagId = -1;
-        planar_m = null;
-        stalenessMs = -1;
+        waitForStart();
 
-        LLResult result = limelight.getLatestResult();
-        if (result == null || !result.isValid()) return;
+        while (opModeIsActive()) {
 
-        FiducialResult target = firstTag20or24(result.getFiducialResults());
-        if (target == null) return;
+            LLResult result = limelight.getLatestResult();
+            tagVisible = false;
+            currentTagId = -1;
+            tx = 0;
+            distanceM = -1;
 
-        tagVisible = true;
-        seenTagId = target.getFiducialId();
-        tx = target.getTargetXDegrees();
-        ty = target.getTargetYDegrees();
-        ta = result.getTa();
-        stalenessMs = result.getStaleness();
+            // === Find first relevant tag (20 or 24) ===
+            if (result != null && result.isValid()) {
+                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
 
-        // Planar distance only (camera and tag on same plane)
-        Pose3D poseTagSpace = target.getRobotPoseTargetSpace();
-        if (poseTagSpace != null && poseTagSpace.getPosition() != null) {
-            double px = poseTagSpace.getPosition().x;
-            double py = poseTagSpace.getPosition().y;
-            planar_m = Math.hypot(px, py);
+                for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                    int id = fiducial.getFiducialId();
+                    if (id == 20 || id == 24) {
+                        tagVisible = true;
+                        currentTagId = id;
+                        tx = fiducial.getTargetXDegrees();
+                        distanceM =  K /Math.sqrt(fiducial.getTargetArea());
+                        }
+                        break; // first valid tag
+                    }
+                }
+
+
+            // === PID-controlled rotation to center tag ===
+            if (tagVisible) {
+                double turnPower = turnPID.calculate(tx, 0);
+                turnPower = Range.clip(turnPower, -0.3, 0.3);
+
+                if (!turnPID.atSetPoint() && Math.abs(turnPower) < MIN_TURN_POWER) {
+                    turnPower = Math.copySign(MIN_TURN_POWER, turnPower);
+                }
+
+                if (!turnPID.atSetPoint()) {
+                    drive.driveRobotCentric(0, 0, turnPower);
+                } else {
+                    drive.stop();
+                }
+            } else {
+                drive.stop(); // No tag visible
+            }
+
+            // === Telemetry ===
+            telemetry.addLine("---- Limelight Telemetry ----");
+            telemetry.addData("Tag Visible", tagVisible);
+            telemetry.addData("Tag ID", currentTagId);
+            telemetry.addData("tx (° offset)", "%.2f", tx);
+            telemetry.addData("Forward Distance (m)", "%.4f", distanceM);
+            telemetry.addData("PID At Setpoint", turnPID.atSetPoint());
+            telemetry.addLine("-----------------------------");
+
+           /* if (result != null && result.isValid()) {
+                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+                for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                    Pose3D pose = fiducial.getRobotPoseTargetSpace();
+                    if (pose != null) {
+                        telemetry.addData("Fiducial " + fiducial.getFiducialId(),
+                                String.format("Y=%.2f m | Xdeg=%.1f° Ydeg=%.1f°",
+                                       // pose.getY(),
+                                        fiducial.getTargetXDegrees(),
+                                        fiducial.getTargetYDegrees()));
+                    }
+                }
+            }
+*/
+            telemetry.update();
         }
-    }
-
-    private FiducialResult firstTag20or24(List<FiducialResult> list) {
-        if (list == null) return null;
-        for (FiducialResult f : list) {
-            int id = f.getFiducialId();
-            if (id == 20 || id == 24) return f;
-        }
-        return null;
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return Math.max(lo, Math.min(hi, v));
     }
 }
