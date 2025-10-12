@@ -23,11 +23,11 @@ public class TransferArm {
 
             if (!initialized) {
                 timer.reset();
-                transferBoxServo.setPosition(0.88);
+                transferBoxServo.setPosition(0);
                 initialized = true;
             }
             if (timer.seconds() > 0.2) {
-                transferBoxServo.setPosition(0);
+                transferBoxServo.setPosition(0.88);
                 return true;
             }
             else  return false;
