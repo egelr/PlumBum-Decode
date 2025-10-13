@@ -20,21 +20,24 @@ public class TransferArm {
     public class launch implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-
-            if (!initialized) {
-                timer.reset();
-                transferBoxServo.setPosition(0);
-                initialized = true;
-            }
-            if (timer.seconds() > 0.2) {
-                transferBoxServo.setPosition(0.88);
-                return true;
-            }
-            else  return false;
+            transferBoxServo.setPosition(0.71);
+            return false;
         }
     }
 
     public Action launch() {
         return new TransferArm.launch();
+    }
+    public class preset implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            transferBoxServo.setPosition(0.87);
+            return false;
+        }
+
+    }
+
+    public Action preset() {
+        return new TransferArm.preset();
     }
 }

@@ -34,7 +34,7 @@ public class Intake {
                 //timer.reset();
                 initialized = true;
             }
-            return true;
+            return false;
         }
     }
     public  Action IntakeOff() {
@@ -50,10 +50,22 @@ public class Intake {
                 //timer.reset();
                 initialized = true;
             }
-            return true;
+            return false;
         }
     }
     public  Action IntakeOn() {
         return new Intake.IntakeOn();
+    }
+    public class preset implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            transferBlockServo.setPosition(0.38);
+            return false;
+        }
+
+    }
+
+    public Action preset() {
+        return new Intake.preset();
     }
 }

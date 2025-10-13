@@ -45,9 +45,9 @@ public class Shooter {
             double Rv = Math.abs(shooterRight.getVelocity()-targetVelocity);
 
             if (Lv<50 && Rv < 50 && timer.seconds() < 1.5) {
-                return true;
-            } else {
                 return false;
+            } else {
+                return true;
             }
         }
     }
@@ -65,7 +65,7 @@ public class Shooter {
                 //timer.reset();
                 initialized = true;
             }
-                return true;
+                return false;
         }
     }
     public  Action ShooterOff() {
