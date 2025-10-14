@@ -41,49 +41,37 @@ public class AutoShootingRed extends LinearOpMode {
 
         TrajectoryActionBuilder firstShootingTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                .splineToSplineHeading(new Pose2d(55,-25,Math.toRadians(-225)), Math.toRadians(0));
+                .strafeToLinearHeading(new Vector2d(55, -25),Math.toRadians(-225.0));
         TrajectoryActionBuilder firstIntakeTrajectory = firstShootingTrajectory.endTrajectory().fresh()
                .setReversed(false)
-               .turn(Math.toRadians(135));
+                .strafeToLinearHeading(new Vector2d(45.0, -8.0),Math.toRadians(-90.0));
         TrajectoryActionBuilder firstIntakeTrajectory2 = firstIntakeTrajectory.endTrajectory().fresh()
-                .setReversed(true)
-                .strafeTo(new Vector2d(45, -8));
-        TrajectoryActionBuilder firstIntakeTrajectory3 = firstIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
                 .strafeTo(new Vector2d(45, -3))
                 .waitSeconds(0.5)
                 .strafeTo(new Vector2d(45, 2))
                 .waitSeconds(0.5)
                 .strafeTo(new Vector2d(45, 9));
-        TrajectoryActionBuilder secondShootingTrajectory = firstIntakeTrajectory3.endTrajectory().fresh()
+        TrajectoryActionBuilder secondShootingTrajectory = firstIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeTo(new Vector2d(55, -25))
-                .turnTo(Math.toRadians(-225));
+                .strafeToLinearHeading(new Vector2d(55.0, -25.0),Math.toRadians(-225.0));
         TrajectoryActionBuilder secondIntakeTrajectory1 = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .turn(Math.toRadians(135));
-        TrajectoryActionBuilder secondIntakeTrajectory2 = secondIntakeTrajectory1.endTrajectory().fresh()
-                .setReversed(true)
-                .strafeTo(new Vector2d(78.5, -8));
+                .strafeToLinearHeading(new Vector2d(78.5, -8.0),Math.toRadians(-90.0));
 
 
         Action firstShootingTrajectoryAction;
         Action firstIntakeTrajectoryAction;
         Action firstIntakeTrajectory2Action;
-        Action firstIntakeTrajectory3Action;
         Action secondShootingTrajectoryAction;
         Action secondIntakeTrajectory1Action;
-        Action secondIntakeTrajectory2Action;
 
 
         firstShootingTrajectoryAction = firstShootingTrajectory.build();
         firstIntakeTrajectoryAction = firstIntakeTrajectory.build();
         firstIntakeTrajectory2Action = firstIntakeTrajectory2.build();
-        firstIntakeTrajectory3Action = firstIntakeTrajectory3.build();
         secondShootingTrajectoryAction = secondShootingTrajectory.build();
         secondIntakeTrajectory1Action = secondIntakeTrajectory1.build();
-        secondIntakeTrajectory2Action = secondIntakeTrajectory2.build();
-
 
         Actions.runBlocking(transferArm.preset());
         Actions.runBlocking(intake.preset());
@@ -123,11 +111,9 @@ public class AutoShootingRed extends LinearOpMode {
                             firstIntakeTrajectoryAction,
                             
                             new ParallelAction(
-                                    firstIntakeTrajectory2Action,
-                                    intake.IntakeOn()
-                            ),
-
-                            firstIntakeTrajectory3Action,
+                                    intake.IntakeOn(),
+                                    firstIntakeTrajectory2Action
+                                    ),
                             secondShootingTrajectoryAction,
                             intake.IntakeOff(),
 
@@ -154,9 +140,8 @@ public class AutoShootingRed extends LinearOpMode {
                                     )
                             ),
                             shooter.ShooterOff(),
-                            secondIntakeTrajectory1Action,
                             new ParallelAction(
-                                    secondIntakeTrajectory2Action,
+                                    secondIntakeTrajectory1Action,
                                     intake.IntakeOn()
                             )
 
