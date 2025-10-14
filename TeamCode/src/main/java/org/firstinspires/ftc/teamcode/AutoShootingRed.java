@@ -50,14 +50,12 @@ public class AutoShootingRed extends LinearOpMode {
                 .strafeTo(new Vector2d(45, -8));
         TrajectoryActionBuilder firstIntakeTrajectory3 = firstIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(45, -3));
-        TrajectoryActionBuilder firstIntakeTrajectory4 = firstIntakeTrajectory3.endTrajectory().fresh()
-                .setReversed(true)
-                .strafeTo(new Vector2d(45, 2));
-        TrajectoryActionBuilder firstIntakeTrajectory5 = firstIntakeTrajectory4.endTrajectory().fresh()
-                .setReversed(true)
+                .strafeTo(new Vector2d(45, -3))
+                .waitSeconds(0.5)
+                .strafeTo(new Vector2d(45, 2))
+                .waitSeconds(0.5)
                 .strafeTo(new Vector2d(45, 9));
-        TrajectoryActionBuilder secondShootingTrajectory = firstIntakeTrajectory5.endTrajectory().fresh()
+        TrajectoryActionBuilder secondShootingTrajectory = firstIntakeTrajectory3.endTrajectory().fresh()
                 .setReversed(false)
                 .strafeTo(new Vector2d(55, -25))
                 .turnTo(Math.toRadians(-225));
@@ -73,8 +71,6 @@ public class AutoShootingRed extends LinearOpMode {
         Action firstIntakeTrajectoryAction;
         Action firstIntakeTrajectory2Action;
         Action firstIntakeTrajectory3Action;
-        Action firstIntakeTrajectory4Action;
-        Action firstIntakeTrajectory5Action;
         Action secondShootingTrajectoryAction;
         Action secondIntakeTrajectory1Action;
         Action secondIntakeTrajectory2Action;
@@ -84,8 +80,6 @@ public class AutoShootingRed extends LinearOpMode {
         firstIntakeTrajectoryAction = firstIntakeTrajectory.build();
         firstIntakeTrajectory2Action = firstIntakeTrajectory2.build();
         firstIntakeTrajectory3Action = firstIntakeTrajectory3.build();
-        firstIntakeTrajectory4Action = firstIntakeTrajectory4.build();
-        firstIntakeTrajectory5Action = firstIntakeTrajectory5.build();
         secondShootingTrajectoryAction = secondShootingTrajectory.build();
         secondIntakeTrajectory1Action = secondIntakeTrajectory1.build();
         secondIntakeTrajectory2Action = secondIntakeTrajectory2.build();
@@ -106,67 +100,57 @@ public class AutoShootingRed extends LinearOpMode {
 
                             new ParallelAction(
                             shooter.ShooterOn(),
-                            new SequentialAction(
-                                    firstShootingTrajectoryAction,
+                                    new SequentialAction(
+                                        firstShootingTrajectoryAction,
 
-                                    transferArm.launch(),
-                                    new SleepAction(0.4),
-                                    transferArm.preset(),
-                                    new SleepAction(0.5),
+                                        transferArm.launch(),
+                                        new SleepAction(Variables.sleepAfterLaunch),
+                                        transferArm.preset(),
+                                        new SleepAction(Variables.sleepAfterPreset),
 
-                                    transferArm.launch(),
-                                    new SleepAction(0.4),
-                                    transferArm.preset(),
-                                    new SleepAction(0.5),
+                                        transferArm.launch(),
+                                        new SleepAction(Variables.sleepAfterLaunch),
+                                        transferArm.preset(),
+                                        new SleepAction(Variables.sleepAfterPreset),
 
-                                    transferArm.launch(),
-                                    new SleepAction(0.4),
-                                    transferArm.preset(),
-                                    new SleepAction(0.5)
-
-                                    /*transferArm.launch(),
-                                    new SleepAction(0.4),
-                                    transferArm.preset(),
-                                    new SleepAction(0.5)*/
-                            )
+                                        transferArm.launch(),
+                                        new SleepAction(Variables.sleepAfterLaunch),
+                                        transferArm.preset(),
+                                        new SleepAction(Variables.sleepAfterPreset)
+                                    )
                             ),
                             shooter.ShooterOff(),
                             firstIntakeTrajectoryAction,
+                            
                             new ParallelAction(
                                     firstIntakeTrajectory2Action,
                                     intake.IntakeOn()
                             ),
+
                             firstIntakeTrajectory3Action,
-                            new SleepAction(0.5),
-                            firstIntakeTrajectory4Action,
-                            new SleepAction(0.5),
-                            firstIntakeTrajectory5Action,
                             secondShootingTrajectoryAction,
                             intake.IntakeOff(),
+
                             new ParallelAction(
                                     shooter.ShooterOn(),
                                     new SequentialAction(
                                             firstShootingTrajectoryAction,
                                             new SleepAction(0.5),
-                                            transferArm.launch(),
-                                            new SleepAction(0.4),
-                                            transferArm.preset(),
-                                            new SleepAction(0.5),
 
                                             transferArm.launch(),
-                                            new SleepAction(0.4),
+                                            new SleepAction(Variables.sleepAfterLaunch),
                                             transferArm.preset(),
-                                            new SleepAction(0.5),
+                                            new SleepAction(Variables.sleepAfterPreset),
 
                                             transferArm.launch(),
-                                            new SleepAction(0.4),
+                                            new SleepAction(Variables.sleepAfterLaunch),
                                             transferArm.preset(),
-                                            new SleepAction(0.5)
+                                            new SleepAction(Variables.sleepAfterPreset),
 
-                                    /*transferArm.launch(),
-                                    new SleepAction(0.4),
-                                    transferArm.preset(),
-                                    new SleepAction(0.5)*/
+                                            transferArm.launch(),
+                                            new SleepAction(Variables.sleepAfterLaunch),
+                                            transferArm.preset(),
+                                            new SleepAction(Variables.sleepAfterPreset)
                                     )
                             ),
                             shooter.ShooterOff(),

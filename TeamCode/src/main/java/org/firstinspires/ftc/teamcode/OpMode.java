@@ -103,20 +103,20 @@ public class OpMode extends LinearOpMode {
             }
             if (gamepad1.triangle) {
                 intakeMotor.set(1);
-                transferBlockServo.setPosition(0.6);
+                transferBlockServo.setPosition(Variables.transferBlockOpened);
             }
             if (gamepad1.circle) {
                 intakeMotor.set(0);
-                transferBlockServo.setPosition(0.38);
+                transferBlockServo.setPosition(Variables.transferBlockClosed);
             }
             if(gamepad1.left_bumper){
                 intakeMotor.set(-1);
-                transferBlockServo.setPosition(0.6);
+                transferBlockServo.setPosition(Variables.transferBlockOpened);
             }
             if (gamepad1.square) {
-                transferBoxServo.setPosition(0.71);
+                transferBoxServo.setPosition(Variables.transferBoxLaunch);
                 sleep(200);
-                transferBoxServo.setPosition(0.87);
+                transferBoxServo.setPosition(Variables.transferBoxPreset);
             }
             if(gamepad1.cross){
                 targetVelocity = MAX_TICKS_PER_SEC * 0.329;
@@ -129,19 +129,13 @@ public class OpMode extends LinearOpMode {
             }
             if (gamepad1.guide) {
                 targetVelocity = 0;
-                transferBlockServo.setPosition(0.38);
-                transferBoxServo.setPosition(0.87);
+                transferBlockServo.setPosition(Variables.transferBlockClosed);
+                transferBoxServo.setPosition(Variables.transferBoxPreset);
             }
 
             // Clamp target
             targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
 
-            /*if(targetVelocity > 0){
-                targetVelocity1 = targetVelocity + 80;
-            }
-            else{
-                targetVelocity1 = 0;
-            }*/
             // Apply velocity
             shooterLeft.setVelocity(targetVelocity);
             shooterRight.setVelocity(targetVelocity);

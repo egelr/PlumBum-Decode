@@ -20,7 +20,7 @@ public class TransferArm {
     public class launch implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            transferBoxServo.setPosition(0.71);
+            transferBoxServo.setPosition(Variables.transferBoxLaunch);
             return false;
         }
     }
@@ -31,7 +31,7 @@ public class TransferArm {
     public class preset implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            transferBoxServo.setPosition(0.87);
+            transferBoxServo.setPosition(Variables.transferBoxPreset);
             return false;
         }
 

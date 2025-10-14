@@ -30,7 +30,7 @@ public class Intake {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 intakeMotor.setPower(0);
-                transferBlockServo.setPosition(0.38);
+                transferBlockServo.setPosition(Variables.transferBlockClosed);
                 //timer.reset();
                 initialized = true;
             }
@@ -46,7 +46,7 @@ public class Intake {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 intakeMotor.setPower(1);
-                transferBlockServo.setPosition(0.6);
+                transferBlockServo.setPosition(Variables.transferBlockOpened);
                 //timer.reset();
                 initialized = true;
             }
@@ -59,7 +59,7 @@ public class Intake {
     public class preset implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            transferBlockServo.setPosition(0.38);
+            transferBlockServo.setPosition(Variables.transferBlockClosed);
             return false;
         }
 
