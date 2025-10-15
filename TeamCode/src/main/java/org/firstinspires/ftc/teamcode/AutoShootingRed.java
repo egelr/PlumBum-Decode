@@ -145,10 +145,10 @@ public class AutoShootingRed extends LinearOpMode {
                             ),
 
                             firstIntakeTrajectory3Action,
-                            secondShootingTrajectoryAction,
                             intake.IntakeOff(),
 
                             new ParallelAction(
+                                    secondShootingTrajectoryAction,
                                     shooter.ShooterOn(),
                                     new SequentialAction(
                                             new SleepAction(1),

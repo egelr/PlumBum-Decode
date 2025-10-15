@@ -136,59 +136,61 @@ public class AutoShootingRedTesting extends LinearOpMode {
                             ),
 
                             firstIntakeTrajectory2Action,
-                            secondShootingTrajectoryAction,
-                            intake.IntakeOff(),
 
                             new ParallelAction(
-                                    shooter.ShooterOn(),
-                                    new SequentialAction(
-                                            new SleepAction(1), //galima keist
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset)
-                                    )
+                                    secondShootingTrajectoryAction,
+                                    intake.IntakeOff(),
+                                    shooter.ShooterOn()
                             ),
+
+                            new SleepAction(0.5), //galima keist
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
                             shooter.ShooterOff(),
+
                             new ParallelAction(
                                     secondIntakeTrajectory1Action,
                                     intake.IntakeOn()
                             ),
                             secondIntakeTrajectory2Action,
-                            thirdShootingTrajectoryAction,
-                            intake.IntakeOff(),
+                            
                             new ParallelAction(
                                     shooter.ShooterOn(),
-                                    new SequentialAction(
-                                            new SleepAction(0.4), //galima keist
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset)
-                                    )
+                                    thirdShootingTrajectoryAction,
+                                    intake.IntakeOff()
                             ),
+
+                            new SleepAction(0.5), //galima keist
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
                             new ParallelAction(
                                     intake.IntakeOff(),
                                     parkingTrajectoryAction
