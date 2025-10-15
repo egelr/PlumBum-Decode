@@ -44,7 +44,7 @@ public class Shooter {
             double Lv = Math.abs(shooterLeft.getVelocity()-targetVelocity);
             double Rv = Math.abs(shooterRight.getVelocity()-targetVelocity);
 
-            if (Lv<50 && Rv < 50 && timer.seconds() > 1.5) {
+            if (Lv<50 && Rv < 50 || timer.seconds() > 1.5) {
                 return false;
             } else {
                 return true;
