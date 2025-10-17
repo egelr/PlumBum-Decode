@@ -149,26 +149,28 @@ public class AutoShootingRed extends LinearOpMode {
 
                             new ParallelAction(
                                     secondShootingTrajectoryAction,
-                                    shooter.ShooterOn(),
-                                    new SequentialAction(
-                                            new SleepAction(1),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset),
-
-                                            transferArm.launch(),
-                                            new SleepAction(Variables.sleepAfterLaunch),
-                                            transferArm.preset(),
-                                            new SleepAction(Variables.sleepAfterPreset)
-                                    )
+                                    shooter.ShooterOn()
                             ),
+
+                            new SleepAction(0.6), //galima keisti
+
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
+                            transferArm.launch(),
+                            new SleepAction(Variables.sleepAfterLaunch),
+                            transferArm.preset(),
+                            new SleepAction(Variables.sleepAfterPreset),
+
                             shooter.ShooterOff(),
                             secondIntakeTrajectory1Action,
                             new ParallelAction(
@@ -181,7 +183,7 @@ public class AutoShootingRed extends LinearOpMode {
                             /*new ParallelAction(
                                     shooter.ShooterOn(),
                                     new SequentialAction(
-                                            new SleepAction(0.4),
+                                            new SleepAction(0.4), //galima keisti
 
                                             transferArm.launch(),
                                             new SleepAction(Variables.sleepAfterLaunch),

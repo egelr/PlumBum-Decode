@@ -45,30 +45,30 @@ public class AutoShootingRedTesting extends LinearOpMode {
                 .splineToSplineHeading(new Pose2d(55,-25,Math.toRadians(-225)), Math.toRadians(0));
         TrajectoryActionBuilder firstIntakeTrajectory1 = firstShootingTrajectory.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeToLinearHeading(new Vector2d(45.0, -8.0),Math.toRadians(-90.0)); // +90??
+                .strafeToLinearHeading(new Vector2d(50, -4),Math.toRadians(-80)); // +90??
         TrajectoryActionBuilder firstIntakeTrajectory2 = firstIntakeTrajectory1.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(45, -3))
+                .strafeTo(new Vector2d(50, -2.5))
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(45, 2))
+                .strafeTo(new Vector2d(50, 2.5))
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(45, 9));
+                .strafeTo(new Vector2d(50, 8));
         TrajectoryActionBuilder secondShootingTrajectory = firstIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(55.0, -25.0),Math.toRadians(-225.0));
+                .strafeToLinearHeading(new Vector2d(55.0, -25.0),Math.toRadians(-227.0));
         TrajectoryActionBuilder secondIntakeTrajectory1 = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(78.5, -8),Math.toRadians(-90)); // +90??
+                .strafeToLinearHeading(new Vector2d(76, -8),Math.toRadians(-90)); // +90??
         TrajectoryActionBuilder secondIntakeTrajectory2 = secondIntakeTrajectory1.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(78.5, -3))
+                .strafeTo(new Vector2d(76, -4.5))
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(78.5, 2))
+                .strafeTo(new Vector2d(76, 0.5))
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(78.5, 9));
+                .strafeTo(new Vector2d(76, 5.5));
         TrajectoryActionBuilder thirdShootingTrajectory = secondIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(55.0, -25.0),Math.toRadians(-225.0));
+                .strafeToLinearHeading(new Vector2d(55.0, -29.0),Math.toRadians(-229.0));
         TrajectoryActionBuilder parkingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
                 .strafeTo(new Vector2d(55, -20));
@@ -139,9 +139,11 @@ public class AutoShootingRedTesting extends LinearOpMode {
 
                             new ParallelAction(
                                     secondShootingTrajectoryAction,
-                                    intake.IntakeOff(),
                                     shooter.ShooterOn()
                             ),
+
+                            intake.IntakeOff(),
+
 
                             new SleepAction(0.5), //galima keist
 
@@ -167,12 +169,13 @@ public class AutoShootingRedTesting extends LinearOpMode {
                                     intake.IntakeOn()
                             ),
                             secondIntakeTrajectory2Action,
-                            
+
                             new ParallelAction(
                                     shooter.ShooterOn(),
-                                    thirdShootingTrajectoryAction,
-                                    intake.IntakeOff()
+                                    thirdShootingTrajectoryAction
                             ),
+
+                            intake.IntakeOff(),
 
                             new SleepAction(0.5), //galima keist
 
