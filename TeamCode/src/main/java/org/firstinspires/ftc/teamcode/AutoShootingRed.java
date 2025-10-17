@@ -28,7 +28,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 
 @Config
-@Autonomous(name = "AutoShootingRed", group = "Autonomous")
+@Autonomous(name = "Red", group = "Autonomous")
 public class AutoShootingRed extends LinearOpMode {
 
     @Override
@@ -75,8 +75,8 @@ public class AutoShootingRed extends LinearOpMode {
                 .strafeTo(new Vector2d(78.5, 9));
         TrajectoryActionBuilder parkingTrajectory = secondIntakeTrajectory3.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeTo(new Vector2d(55, -20))
-                .turnTo(Math.toRadians(-225));
+                .turnTo(Math.toRadians(-225))
+                .strafeTo(new Vector2d(55, -20));
 
 
 
