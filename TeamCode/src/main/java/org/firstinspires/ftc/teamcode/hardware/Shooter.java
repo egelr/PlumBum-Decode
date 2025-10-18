@@ -38,7 +38,7 @@ public class Shooter {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
-                targetVelocity = 2800 * 0.329;
+                targetVelocity = 2800 * 0.31;
                 //targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
                 shooterLeft.setVelocity(targetVelocity);
                 shooterRight.setVelocity(targetVelocity);
@@ -74,5 +74,32 @@ public class Shooter {
     }
     public  Action ShooterOff() {
         return new Shooter.ShooterOff();
+    }
+
+    public class ShooterOnFar implements Action {
+        private boolean initialized = false;
+        private double targetVelocity;
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!initialized) {
+                targetVelocity = 2800 * 0.37;
+                //targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
+                shooterLeft.setVelocity(targetVelocity);
+                shooterRight.setVelocity(targetVelocity);
+                timer.reset();
+                initialized = true;
+            }
+            double Lv = Math.abs(shooterLeft.getVelocity()-targetVelocity);
+            double Rv = Math.abs(shooterRight.getVelocity()-targetVelocity);
+
+            if (Lv<50 && Rv < 50 || timer.seconds() > 1.5) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    public  Action ShooterOnFar() {
+        return new Shooter.ShooterOnFar();
     }
 }

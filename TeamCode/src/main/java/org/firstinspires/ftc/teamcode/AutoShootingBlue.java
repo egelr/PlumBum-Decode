@@ -43,44 +43,44 @@ public class AutoShootingBlue extends LinearOpMode {
         // y: -25 -> 25, heading: -225 -> 225
         TrajectoryActionBuilder firstShootingTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                .splineToSplineHeading(new Pose2d(55, 25, Math.toRadians(225)), Math.toRadians(0));
+                .splineToSplineHeading(new Pose2d(54, 25, Math.toRadians(222)), Math.toRadians(0));
 
         TrajectoryActionBuilder firstIntakeTrajectory = firstShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .turn(Math.toRadians(-135)); // 135 -> -135
+                .turn(Math.toRadians(-132)); // 135 -> -135
 
         TrajectoryActionBuilder firstIntakeTrajectory2 = firstIntakeTrajectory.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(45, 8)); // -8 -> 8
+                .strafeTo(new Vector2d(45.5, 12)); // -8 -> 8
 
         TrajectoryActionBuilder firstIntakeTrajectory3 = firstIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(45, 3))   // -3 -> 3
+                .strafeTo(new Vector2d(45.5, 7))
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(45, -2))  // 2 -> -2
+                .strafeTo(new Vector2d(45.5, 3))
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(45, -9)); // 9 -> -9
+                .strafeTo(new Vector2d(45.5, -3));
 
         TrajectoryActionBuilder secondShootingTrajectory = firstIntakeTrajectory3.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeTo(new Vector2d(55, 25))      // -25 -> 25
-                .turnTo(Math.toRadians(225));        // -225 -> 225
+                .strafeTo(new Vector2d(54, 25))      // -25 -> 25
+                .turnTo(Math.toRadians(222));        // -225 -> 225
 
         TrajectoryActionBuilder secondIntakeTrajectory1 = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .turn(Math.toRadians(-135)); // 135 -> -135
+                .turn(Math.toRadians(-132)); // 135 -> -135
 
         TrajectoryActionBuilder secondIntakeTrajectory2 = secondIntakeTrajectory1.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(78.5, 8)); // -8 -> 8
+                .strafeTo(new Vector2d(79, 12)); // -8 -> 8
 
         TrajectoryActionBuilder secondIntakeTrajectory3 = secondIntakeTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(78.5, 3))    // -3 -> 3
+                .strafeTo(new Vector2d(79, 8))    // -3 -> 3
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(78.5, -2))   // 2 -> -2
+                .strafeTo(new Vector2d(79, 3))   // 2 -> -2
                 .waitSeconds(0.4)
-                .strafeTo(new Vector2d(78.5, -9));  // 9 -> -9
+                .strafeTo(new Vector2d(79, -5));  // 9 -> -9
 
         TrajectoryActionBuilder parkingTrajectory = secondIntakeTrajectory3.endTrajectory().fresh()
                 .setReversed(false)
@@ -123,7 +123,6 @@ public class AutoShootingBlue extends LinearOpMode {
 
             Actions.runBlocking(
                     new SequentialAction(
-
                             new ParallelAction(
                                     shooter.ShooterOn(),
                                     new SequentialAction(
@@ -154,14 +153,15 @@ public class AutoShootingBlue extends LinearOpMode {
                             ),
 
                             firstIntakeTrajectory3Action,
-                            intake.IntakeOff(),
 
                             new ParallelAction(
                                     secondShootingTrajectoryAction,
                                     shooter.ShooterOn()
                             ),
 
-                            new SleepAction(0.6), //galima keisti
+                            intake.IntakeOff(),
+
+                            new SleepAction(0.8), //galima keisti
 
 
                             transferArm.launch(),

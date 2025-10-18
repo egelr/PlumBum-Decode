@@ -7,8 +7,8 @@ public class Variables {
     public static final double transferBoxPreset = 0.885;
     public static final double transferBlockOpened = 0.6;
     public static final double transferBlockClosed = 0.38;
-    public static final double sleepAfterLaunch = 0.8;
-    public static final double sleepAfterPreset = 0.5;
+    public static final double sleepAfterLaunch = 0.4;
+    public static final double sleepAfterPreset = 0.6;
 
 
 
