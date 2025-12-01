@@ -23,11 +23,16 @@ public class NewTeleOp extends LinearOpMode {
 
     private DcMotorEx shooterLeft, shooterRight;
 
+    // Shooter angle servo
+    private Servo shooterAngleServo;
+    private double shooterAnglePos = 0.0;   // 0.0–0.5 like in ShooterTesting
+
     // Motor specs
     private static final int CPR = 28;             // encoder counts per rev (GoBILDA 6000RPM)
     private static final int MAX_RPM = 6000;
     private static final int MAX_TICKS_PER_SEC = (MAX_RPM / 60) * CPR;  // ~2800
 
+    // Shooter target velocity
     private double targetVelocity = 0;
 
     // Sorter + sensors
@@ -60,7 +65,7 @@ public class NewTeleOp extends LinearOpMode {
     private boolean intakeEnabled = false;  // true when intake running forward
 
     // Constants
-    private final double x = 0.05;                // servo offset
+    private final double sorterOffset = 0.05;          // servo offset for sorter
     private final double BALL_DETECT_DISTANCE = 4.0;   // cm, tune this
     private final long BALL_COOLDOWN_MS = 700;         // ms between valid balls
 
@@ -69,7 +74,9 @@ public class NewTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // Drivetrain Motors
+        // -----------------------------
+        // 1. DRIVETRAIN SETUP
+        // -----------------------------
         fL = new Motor(hardwareMap, "leftFront", Motor.GoBILDA.RPM_435);
         fR = new Motor(hardwareMap, "rightFront", Motor.GoBILDA.RPM_435);
         bL = new Motor(hardwareMap, "leftBack", Motor.GoBILDA.RPM_435);
@@ -80,30 +87,36 @@ public class NewTeleOp extends LinearOpMode {
         bL.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         bR.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        //Creating the Mecanum Drivetrain
         MecanumDrive drive = new MecanumDrive(fL, fR, bL, bR);
 
-        // Subsystem Motors
+        // -----------------------------
+        // 2. INTAKE + SHOOTER SETUP
+        // -----------------------------
         intakeMotor = new Motor(hardwareMap, "intakeMotor", Motor.GoBILDA.RPM_435);
+
         shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
         shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
 
-        shooterRight.setDirection(DcMotor.Direction.REVERSE);
-        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // Shooter like in ShooterTesting (left is primary / reversed)
+        shooterLeft.setDirection(DcMotor.Direction.REVERSE);
         shooterLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooterRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        // PIDF coefficients tuned for 6000 RPM
+        // PIDF coefficients tuned for 6000 RPM (can be just on left, but both is fine)
         shooterLeft.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
-        shooterRight.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
 
-        // Servos
+        // Shooter angle servo
+        shooterAngleServo = hardwareMap.get(Servo.class, "shooterAngleServo");
+        shooterAnglePos = 0.0;
+        shooterAngleServo.setPosition(shooterAnglePos);
+
+        // -----------------------------
+        // 3. SERVOS + SENSORS SETUP
+        // -----------------------------
         transferOutputServo = hardwareMap.get(Servo.class, "transferOutputServo");
         sorterLeftServo = hardwareMap.get(Servo.class, "sorterLeftServo");
         sorterRightServo = hardwareMap.get(Servo.class, "sorterRightServo");
 
-        // Sensors
         sensorColorFront = hardwareMap.get(ColorSensor.class, "colourSensorFront");
         sensorDistanceFront = hardwareMap.get(DistanceSensor.class, "colourSensorFront");
 
@@ -111,7 +124,7 @@ public class NewTeleOp extends LinearOpMode {
         sensorDistanceBack = hardwareMap.get(DistanceSensor.class, "colourSensorBack");
 
         // Initial sorter position
-        sorterRightServo.setPosition(0 + x);
+        sorterRightServo.setPosition(0 + sorterOffset);
         sorterLeftServo.setPosition(0);
 
         ballTimer.reset();
@@ -133,7 +146,6 @@ public class NewTeleOp extends LinearOpMode {
                     false
             );
 
-            // Speed mode
             if (gamepad1.right_trigger > 0.5) {
                 drive_speed = 0.45;
             } else {
@@ -143,56 +155,89 @@ public class NewTeleOp extends LinearOpMode {
             // -----------------------------
             // 2. INTAKE CONTROL
             // -----------------------------
-            // Triangle = intake forward ON
-            if (gamepad1.triangle) {
+            if (gamepad1.triangle) {          // intake forward ON
                 intakeMotor.set(1);
                 intakeEnabled = true;
             }
-            // Circle = intake OFF
-            if (gamepad1.circle) {
+            if (gamepad1.circle) {            // intake OFF
                 intakeMotor.set(0);
                 intakeEnabled = false;
             }
-            // Left bumper = reverse intake (no detection while reversing)
-            if (gamepad1.left_bumper) {
+            if (gamepad1.left_bumper) {       // reverse intake, no detection
                 intakeMotor.set(-1);
                 intakeEnabled = false;
             }
 
             // -----------------------------
-            // 3. TRANSFER + SHOOTER
+            // 3. TRANSFER SERVO
+            // (kept same as your original)
             // -----------------------------
-            if (gamepad1.square) {
+            if (gamepad1.dpad_left) {
                 transferOutputServo.setPosition(0.08);
             }
-            if (gamepad1.cross) {
+            if (gamepad1.dpad_right) {
                 transferOutputServo.setPosition(0.18);
             }
 
-            if (gamepad1.cross) {
+            // -----------------------------
+            // 4. SHOOTER CONTROL (like ShooterTesting)
+            // -----------------------------
+            // square in ShooterTesting starts shooter at 52% speed;
+            // we already use square for transfer – both can happen together if you want.
+            if (gamepad1.square) {
                 targetVelocity = MAX_TICKS_PER_SEC * 0.52;
             }
 
+            if (gamepad1.dpad_up) {
+                targetVelocity += 0.5;   // fine adjust up
+            }
+            if (gamepad1.dpad_down) {
+                targetVelocity -= 0.5;   // fine adjust down
+            }
+
+            // guide: stop shooter + reset angle
             if (gamepad1.guide) {
                 targetVelocity = 0;
-                sorterRightServo.setPosition(0 + x);
+                shooterAnglePos = 0;
+                shooterAngleServo.setPosition(shooterAnglePos);
+
+                // also reset sorter to neutral if you still want that:
+                sorterRightServo.setPosition(0 + sorterOffset);
                 sorterLeftServo.setPosition(0);
             }
 
-            // Clamp target
+            // share: angle preset = 0.5
+            if (gamepad1.share) {
+                shooterAnglePos = 0.5;
+                shooterAngleServo.setPosition(shooterAnglePos);
+            }
+
+            // triangle: tilt up (limit to 0.45)
+            if (gamepad1.triangle && shooterAnglePos < 0.45) {
+                shooterAnglePos += 0.05;
+                shooterAngleServo.setPosition(shooterAnglePos);
+                sleep(300);
+            }
+
+            // cross: tilt down (limit to 0.05)
+            if (gamepad1.cross && shooterAnglePos > 0.05) {
+                shooterAnglePos -= 0.05;
+                shooterAngleServo.setPosition(shooterAnglePos);
+                sleep(300);
+            }
+
+            // Clamp shooter velocity
             targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
 
-            // Apply shooter velocity
             shooterLeft.setVelocity(targetVelocity);
             shooterRight.setVelocity(targetVelocity);
 
             // -----------------------------
-            // 4. BALL DETECTION + SORTER
+            // 5. BALL DETECTION + SORTER
             // Only active while intakeEnabled == true
             // -----------------------------
             if (intakeEnabled && sorterState < 3) {
 
-                // 4.1 Ball presence
                 double distF = sensorDistanceFront.getDistance(DistanceUnit.CM);
                 double distB = sensorDistanceBack.getDistance(DistanceUnit.CM);
 
@@ -201,17 +246,15 @@ public class NewTeleOp extends LinearOpMode {
 
                 boolean newBall = ballDetected && !lastBallPresent && allowNewBall;
 
-                // 4.2 Colour detection
                 int detectedColour = detectColourFromTwoSensors();
 
-                // 4.3 Sorter state machine
                 switch (sorterState) {
 
                     case 0: // first ball
                         if (newBall) {
                             ball1 = detectedColour;
 
-                            sorterRightServo.setPosition(0.375 + x);
+                            sorterRightServo.setPosition(0.375 + sorterOffset);
                             sorterLeftServo.setPosition(0.375);
 
                             sorterState = 1;
@@ -223,7 +266,7 @@ public class NewTeleOp extends LinearOpMode {
                         if (newBall) {
                             ball2 = detectedColour;
 
-                            sorterRightServo.setPosition(0.76 + x);
+                            sorterRightServo.setPosition(0.76 + sorterOffset);
                             sorterLeftServo.setPosition(0.76);
 
                             sorterState = 2;
@@ -238,7 +281,7 @@ public class NewTeleOp extends LinearOpMode {
                             sorterState = 3;   // done
                             ballTimer.reset();
 
-                            // Turn off intake automatically when 3rd ball in
+                            // Turn off intake when 3rd ball is in
                             intakeMotor.set(0);
                             intakeEnabled = false;
                         }
@@ -247,7 +290,6 @@ public class NewTeleOp extends LinearOpMode {
 
                 lastBallPresent = ballDetected;
 
-                // Telemetry related to balls
                 telemetry.addData("Sorter State", sorterState);
                 telemetry.addData("Ball 1", colourToString(ball1));
                 telemetry.addData("Ball 2", colourToString(ball2));
@@ -255,22 +297,23 @@ public class NewTeleOp extends LinearOpMode {
 
                 telemetry.addData("Dist Front (cm)", "%.2f", distF);
                 telemetry.addData("Dist Back  (cm)", "%.2f", distB);
-                telemetry.addData("Cooldown (ms left)", Math.max(0,
-                        BALL_COOLDOWN_MS - (long) ballTimer.milliseconds()));
+                telemetry.addData("Cooldown (ms left)",
+                        Math.max(0, BALL_COOLDOWN_MS - (long) ballTimer.milliseconds()));
 
             } else {
-                // If intake not enabled, reset detection edge so next enable starts clean
+                // reset edge if not intaking
                 lastBallPresent = false;
             }
 
             // -----------------------------
-            // 5. GENERAL TELEMETRY
+            // 6. GENERAL TELEMETRY
             // -----------------------------
             telemetry.addData("Intake Enabled", intakeEnabled);
             telemetry.addData("Target Velocity", targetVelocity);
             telemetry.addData("Target RPM", (targetVelocity / CPR) * 60);
             telemetry.addData("Left Vel", shooterLeft.getVelocity());
             telemetry.addData("Right Vel", shooterRight.getVelocity());
+            telemetry.addData("Shooter Angle Pos", shooterAnglePos);
 
             telemetry.update();
         }
