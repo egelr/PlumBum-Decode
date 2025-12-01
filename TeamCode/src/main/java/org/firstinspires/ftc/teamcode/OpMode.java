@@ -2,25 +2,12 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import android.app.Activity;
-import android.graphics.Color;
-import android.view.View;
-
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import java.util.Locale;
-
-import org.firstinspires.ftc.teamcode.Variables;
 
 @TeleOp(name = "TeleOpMode")
 public class OpMode extends LinearOpMode {
@@ -42,6 +29,8 @@ public class OpMode extends LinearOpMode {
     // Start at 0% power
     private double targetVelocity = 0;
     private double targetVelocity1 = 0;
+
+    private double x = 0.005;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -76,8 +65,9 @@ public class OpMode extends LinearOpMode {
         shooterRight.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
 
         //Creating Servos
-        Servo transferBoxServo = hardwareMap.get(Servo.class, "transferBoxServo");
-        Servo transferBlockServo = hardwareMap.get(Servo.class, "transferBlockServo");
+        Servo transferOutputServo = hardwareMap.get(Servo.class, "transferOutputServo");
+        Servo sorterLeftServo = hardwareMap.get(Servo.class, "sorterLeftServo");
+        Servo sorterRightServo = hardwareMap.get(Servo.class, "sorterRightServo");
 
 
         ElapsedTime timer = new ElapsedTime();
@@ -103,37 +93,42 @@ public class OpMode extends LinearOpMode {
             }
             if (gamepad1.triangle) {
                 intakeMotor.set(1);
-                transferBlockServo.setPosition(Variables.transferBlockOpened);
             }
             if (gamepad1.circle) {
                 intakeMotor.set(0);
-                transferBlockServo.setPosition(Variables.transferBlockClosed);
             }
             if(gamepad1.left_bumper){
                 intakeMotor.set(-1);
-                transferBlockServo.setPosition(Variables.transferBlockOpened);
             }
             if (gamepad1.square) {
-                transferBoxServo.setPosition(Variables.transferBoxLaunch);
-                sleep(200);
-                transferBoxServo.setPosition(Variables.transferBoxPreset);
+                transferOutputServo.setPosition(0.08);
             }
             if(gamepad1.cross){
-                targetVelocity = MAX_TICKS_PER_SEC * 0.31;
+                transferOutputServo.setPosition(0.18);
             }
-            if (gamepad1.dpad_up) {
+
+            if(gamepad1.cross){
+                targetVelocity = MAX_TICKS_PER_SEC * 0.52;
+            }
+            /*if (gamepad1.dpad_up) {
                 targetVelocity += 0.5;  // increase by 50 ticks/sec
             }
             if (gamepad1.dpad_down) {
                 targetVelocity -= 0.5;  // decrease by 50 ticks/sec
+            }*/
+            if(gamepad1.dpad_up){
+                sorterRightServo.setPosition(0.375 + x);
+                sorterLeftServo.setPosition(0.375);
             }
-            if (gamepad1.share){
-                targetVelocity = MAX_TICKS_PER_SEC * 0.38;
+            if(gamepad1.dpad_down){
+                sorterRightServo.setPosition(0.76 + x);
+                sorterLeftServo.setPosition(0.76);
             }
+
             if (gamepad1.guide) {
                 targetVelocity = 0;
-                transferBlockServo.setPosition(Variables.transferBlockClosed);
-                transferBoxServo.setPosition(Variables.transferBoxPreset);
+                sorterRightServo.setPosition(0 + x);
+                sorterLeftServo.setPosition(0);
             }
 
             // Clamp target
