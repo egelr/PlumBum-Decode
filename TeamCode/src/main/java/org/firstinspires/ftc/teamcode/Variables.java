@@ -9,6 +9,14 @@ public class Variables {
     public static final double transferBlockClosed = 0.38;
     public static final double sleepAfterLaunch = 0.4;
     public static final double sleepAfterPreset = 0.6;
+    public static final double sorterOffset = 0.05;  // right servo offset
+    public static final double sorter1Position = 0;
+    public static final double sorter2Position = 0.375;
+    public static final double sorter3Position = 0.76;
+    public static final double transferDownPosition = 0.07;
+    public static final double transferUpPosition = 0.18;
+
+
 
 
 
