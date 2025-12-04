@@ -40,7 +40,7 @@ public class SorterTesting extends LinearOpMode {
 
     // Constants
     private final double x = 0.05;              // servo offset
-    private final double BALL_DETECT_DISTANCE = 4.0;   // cm, tune this
+    private final double BALL_DETECT_DISTANCE = 2.0;   // cm, tune this
     private final long BALL_COOLDOWN_MS = 700;         // ms between valid balls
 
     private final ElapsedTime ballTimer = new ElapsedTime();

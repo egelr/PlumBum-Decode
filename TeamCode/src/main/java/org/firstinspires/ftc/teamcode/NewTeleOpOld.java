@@ -59,7 +59,7 @@ public class NewTeleOpOld extends LinearOpMode {
     private boolean lastShootAllPressed = false;
 
     // Detection constants
-    private final double BALL_DETECT_DISTANCE = 4.0;
+    private final double BALL_DETECT_DISTANCE = 2.0;
     private final long BALL_COOLDOWN_MS = 200;
     private final ElapsedTime ballTimer = new ElapsedTime();
 
@@ -148,7 +148,7 @@ public class NewTeleOpOld extends LinearOpMode {
                 intakeMotor.set(1);
                 intakeEnabled = true;
             }
-            if (gamepad1.circle) {
+            if (gamepad1.cross) {
                 intakeMotor.set(0);
                 intakeEnabled = false;
             }
@@ -194,32 +194,33 @@ public class NewTeleOpOld extends LinearOpMode {
 
             // ----------------------------- SHOOTER -----------------------------
             if (gamepad1.square) {
-                targetVelocity = MAX_TICKS_PER_SEC * 0.52;
+                targetVelocity = MAX_TICKS_PER_SEC * Variables.shooterSpeedMid;
+                shooterAnglePos = Variables.shooterAngleMid;
+                shooterAngleServo.setPosition(shooterAnglePos);
             }
-            if (gamepad1.dpad_up) targetVelocity += 0.5;
-            if (gamepad1.dpad_down) targetVelocity -= 0.5;
+            if (gamepad1.circle ) {
+                targetVelocity = MAX_TICKS_PER_SEC * Variables.shooterSpeedFar;
+                shooterAnglePos = Variables.shooterAngleFar;
+                shooterAngleServo.setPosition(shooterAnglePos);
+            }
+
+            if (gamepad1.dpad_up) targetVelocity += 2;
+            if (gamepad1.dpad_down) targetVelocity -= 2;
 
             if (gamepad1.guide) {
                 targetVelocity = 0;
                 shooterAnglePos = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
-                sorterLeftServo.setPosition(Variables.sorter1Position);
-                sorterRightServo.setPosition(Variables.sorter1Position + Variables.sorterOffset);
             }
 
-            if (gamepad1.share) {
-                shooterAnglePos = 0.15;
-                shooterAngleServo.setPosition(shooterAnglePos);
-            }
-
-            if (gamepad1.options && shooterAnglePos < 0.45) {
-                shooterAnglePos += 0.05;
+            if (gamepad1.share && shooterAnglePos > 0.05) {
+                shooterAnglePos -= 0.02;
                 shooterAngleServo.setPosition(shooterAnglePos);
                 sleep(300);
             }
 
-            if (gamepad1.cross && shooterAnglePos > 0.05) {
-                shooterAnglePos -= 0.05;
+            if (gamepad1.options && shooterAnglePos < 0.45) {
+                shooterAnglePos += 0.02;
                 shooterAngleServo.setPosition(shooterAnglePos);
                 sleep(300);
             }

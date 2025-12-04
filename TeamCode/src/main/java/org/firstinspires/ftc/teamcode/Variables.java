@@ -15,6 +15,16 @@ public class Variables {
     public static final double sorter3Position = 0.76;
     public static final double transferDownPosition = 0.075;
     public static final double transferUpPosition = 0.22;
+    public static final double shooterSpeedNear = 0.6;
+    public static final double shooterSpeedMid = 0.667;
+    public static final double shooterSpeedFar = 0.83;
+    public static final double shooterAngleNear = 0.15;
+    public static final double shooterAngleMid = 0.2;
+    public static final double shooterAngleFar = 0.25;
+
+
+
+
 
 
 

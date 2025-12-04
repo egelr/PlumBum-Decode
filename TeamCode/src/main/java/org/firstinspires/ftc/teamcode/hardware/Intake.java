@@ -16,12 +16,10 @@ import org.firstinspires.ftc.teamcode.Variables;
 
 public class Intake {
     private DcMotorEx intakeMotor;
-    private Servo transferBlockServo;
 
     private ElapsedTime timer = new ElapsedTime();
     public Intake(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
-        transferBlockServo = hardwareMap.get(Servo.class, "transferBlockServo");
     }
 
     public class IntakeOff implements Action {
@@ -30,7 +28,6 @@ public class Intake {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 intakeMotor.setPower(0);
-                transferBlockServo.setPosition(Variables.transferBlockClosed);
                 //timer.reset();
                 initialized = true;
             }
@@ -46,7 +43,6 @@ public class Intake {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 intakeMotor.setPower(1);
-                transferBlockServo.setPosition(Variables.transferBlockOpened);
                 //timer.reset();
                 initialized = true;
             }
@@ -59,7 +55,6 @@ public class Intake {
     public class preset implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            transferBlockServo.setPosition(Variables.transferBlockClosed);
             return false;
         }
 

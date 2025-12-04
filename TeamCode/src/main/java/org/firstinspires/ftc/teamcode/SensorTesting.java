@@ -20,7 +20,7 @@ import java.util.Locale;
 import org.firstinspires.ftc.teamcode.Variables;
 
 
-//@TeleOp(name = "SensorTesting")
+@TeleOp(name = "SensorTesting")
 public class SensorTesting extends LinearOpMode {
 
     ColorSensor sensorColorFront;

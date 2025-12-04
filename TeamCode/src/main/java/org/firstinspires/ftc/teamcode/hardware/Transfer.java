@@ -9,35 +9,35 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Variables;
-public class TransferArm {
-    private Servo transferBoxServo;
+public class Transfer {
+    private Servo transferOutputServo;
     private ElapsedTime timer = new ElapsedTime();
     private boolean initialized = false;
-    public TransferArm(HardwareMap hardwareMap) {
-        transferBoxServo = hardwareMap.get(Servo.class, "transferBoxServo");
+    public Transfer(HardwareMap hardwareMap) {
+        transferOutputServo = hardwareMap.get(Servo.class, "transferOutputServo");
     }
 
     public class launch implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            transferBoxServo.setPosition(Variables.transferBoxLaunch);
+            transferOutputServo.setPosition(Variables.transferUpPosition);
             return false;
         }
     }
 
     public Action launch() {
-        return new TransferArm.launch();
+        return new Transfer.launch();
     }
     public class preset implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            transferBoxServo.setPosition(Variables.transferBoxPreset);
+            transferOutputServo.setPosition(Variables.transferDownPosition);
             return false;
         }
 
     }
 
     public Action preset() {
-        return new TransferArm.preset();
+        return new Transfer.preset();
     }
 }
