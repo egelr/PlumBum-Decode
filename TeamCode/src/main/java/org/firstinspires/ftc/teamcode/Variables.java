@@ -13,8 +13,8 @@ public class Variables {
     public static final double sorter1Position = 0;
     public static final double sorter2Position = 0.375;
     public static final double sorter3Position = 0.76;
-    public static final double transferDownPosition = 0.07;
-    public static final double transferUpPosition = 0.18;
+    public static final double transferDownPosition = 0.075;
+    public static final double transferUpPosition = 0.22;
 
 
 

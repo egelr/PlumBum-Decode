@@ -62,28 +62,28 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 0.002968434; //0.00197895707
+        public double inPerTick = 0.0019789925978;
         public double lateralInPerTick = inPerTick; //0.0022230657717982895; //inPerTick;
-        public double trackWidthTicks = 3767.2783085320343; //5868.083533484154;
+        public double trackWidthTicks = 6175.854728548721; //5868.083533484154;
 
         // feedforward parameters (in tick units)
-        public double kS = 1.3973373298142615; //1.5649833875263424;
-        public double kV = 0.00040405339947532416;
-        public double kA = 0.00012;
+        public double kS = 1.7669134944991933; //1.5649833875263424;
+        public double kV = 0.00025894615347393996;
+        public double kA = 0.00005;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 50;
+        public double maxWheelVel = 70;
         public double minProfileAccel = -30;
-        public double maxProfileAccel = 50;
+        public double maxProfileAccel = 70;
 
         // turn profile parameters (in radians)
         public double maxAngVel = Math.PI; // shared with path
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 1;
-        public double lateralGain = 1;
-        public double headingGain = 1; // shared with turn
+        public double axialGain = 1.5;
+        public double lateralGain = 1.5;
+        public double headingGain = 1.5; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -242,7 +242,7 @@ public final class MecanumDrive {
         //lazyImu = new PinpointIMU(PinpointView);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
+        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick, pose);//PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);//ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }

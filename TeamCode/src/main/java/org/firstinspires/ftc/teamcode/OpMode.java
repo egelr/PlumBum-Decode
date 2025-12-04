@@ -54,11 +54,10 @@ public class OpMode extends LinearOpMode {
         shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
         shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
 
-        shooterRight.setDirection(DcMotor.Direction.REVERSE);
-        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterLeft.setDirection(DcMotor.Direction.REVERSE);
+        shooterRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooterRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // PIDF coefficients tuned for 6000 RPM
         shooterLeft.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
@@ -101,10 +100,10 @@ public class OpMode extends LinearOpMode {
                 intakeMotor.set(-1);
             }
             if (gamepad1.square) {
-                transferOutputServo.setPosition(0.08);
+                transferOutputServo.setPosition(0.075);
             }
-            if(gamepad1.cross){
-                transferOutputServo.setPosition(0.18);
+            if(gamepad1.share){
+                transferOutputServo.setPosition(0.22);
             }
 
             if(gamepad1.cross){
@@ -136,7 +135,11 @@ public class OpMode extends LinearOpMode {
 
             // Apply velocity
             shooterLeft.setVelocity(targetVelocity);
-            shooterRight.setVelocity(targetVelocity);
+
+            double power = targetVelocity / MAX_TICKS_PER_SEC;  // simple feedforward
+            power = Math.max(0, Math.min(1, power));
+
+            shooterRight.setPower(power);
 
             // Telemetry for driver feedback
             telemetry.addData("Target Velocity", targetVelocity);
