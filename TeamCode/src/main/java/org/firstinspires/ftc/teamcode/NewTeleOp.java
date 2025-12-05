@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -55,7 +57,7 @@ public class NewTeleOp extends LinearOpMode {
     // 0=waiting for ball1, 1=waiting for ball2, 2=waiting for ball3, 3=full
     private int sorterState = 0;
 
-    // NEW: actual sorter rotation position
+    // actual sorter rotation position
     // 1 = sorter1Position, 2 = sorter2Position, 3 = sorter3Position
     private int sorterPositionIndex = 1;
 
@@ -74,6 +76,24 @@ public class NewTeleOp extends LinearOpMode {
     private boolean waitingForSorterMove = false;
     private int pendingSorterState = -1;
     private int pendingColor = -1;
+
+    // ---------- TURRET + LIMELIGHT ----------
+    private DcMotorEx turretMotor;
+    private Limelight3A limelight;
+
+    // Turret positions (about ±90°)
+    // - negative = 90° right (clockwise)
+    // + positive = 90° left  (counterclockwise)
+    private static final int TURRET_POS_CENTER = 0;
+    private static final int TURRET_POS_RIGHT  = -232;
+    private static final int TURRET_POS_LEFT   = 232;
+
+    private static final double TURRET_MAX_ANGLE_DEG = 90.0;
+    private static final double TURRET_TICKS_PER_DEGREE = 232.0 / 90.0;  // ≈2.58
+
+    private static final int TURRET_POSITION_TOLERANCE = 5;
+    public static double TURRET_POSITION_P = 5.0;  // SDK PID P gain
+    private static final double TURRET_MOVE_POWER = 0.5;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -126,6 +146,22 @@ public class NewTeleOp extends LinearOpMode {
         ballTimer.reset();
         shooterStableTimer.reset();
 
+        // ----------------------------- TURRET SETUP -----------------------------
+        turretMotor = hardwareMap.get(DcMotorEx.class, "turretPositionMotor");
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretMotor.setTargetPosition(TURRET_POS_CENTER);
+        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretMotor.setTargetPositionTolerance(TURRET_POSITION_TOLERANCE);
+        turretMotor.setPositionPIDFCoefficients(TURRET_POSITION_P);
+
+        // ----------------------------- LIMELIGHT SETUP -----------------------------
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        telemetry.setMsTransmissionInterval(11);
+        limelight.setPollRateHz(100);    // how often we poll for data
+        limelight.pipelineSwitch(0);     // AprilTag pipeline index
+        limelight.start();               // start polling
+
         telemetry.addLine("Ready!");
         telemetry.update();
 
@@ -170,7 +206,10 @@ public class NewTeleOp extends LinearOpMode {
 
             if (shootAllPressed && !lastShootAllPressed && shooterReady) {
 
-                // Current physical rotation of sorter
+                // 1) Aim turret at AprilTag ONLY when we are about to shoot
+                aimTurretAtAprilTag();
+
+                // 2) Current physical rotation of sorter
                 int currentPocketIndex = sorterPositionIndex;
 
                 // Decide order based on where the sorter is now:
@@ -186,7 +225,7 @@ public class NewTeleOp extends LinearOpMode {
                     shootOrder = new int[]{3, 2, 1};
                 }
 
-                // Fire in that order, skipping empty pockets
+                // 3) Fire in that order, skipping empty pockets
                 for (int idx : shootOrder) {
 
                     int ballVal = getBallAtIndex(idx);
@@ -312,6 +351,11 @@ public class NewTeleOp extends LinearOpMode {
                 waitingForSorterMove = false;
             }
 
+            // Cut turret power when it has reached its target
+            if (!turretMotor.isBusy()) {
+                turretMotor.setPower(0);
+            }
+
             // ----------------------------- TELEMETRY -----------------------------
             telemetry.addData("SorterState (balls stored)", sorterState);
             telemetry.addData("SorterPosIndex (1/2/3)", sorterPositionIndex);
@@ -363,6 +407,30 @@ public class NewTeleOp extends LinearOpMode {
             case 3: return ball3;
             default: return -1;
         }
+    }
+
+    private void aimTurretAtAprilTag() {
+        LLResult result = limelight.getLatestResult();
+        boolean hasTarget = result != null && result.isValid();
+
+        if (!hasTarget) return;
+
+        double tx = result.getTx();  // horizontal offset (deg)
+
+        // Limelight: tx > 0 => tag to the RIGHT of crosshair
+        // Turret: negative ticks = right, positive = left
+        // To turn turret toward tag, we negate tx:
+        double desiredAngleDeg = -tx;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
+
+        // Clamp angle
+        if (desiredAngleDeg > TURRET_MAX_ANGLE_DEG)  desiredAngleDeg = TURRET_MAX_ANGLE_DEG;
+        if (desiredAngleDeg < -TURRET_MAX_ANGLE_DEG) desiredAngleDeg = -TURRET_MAX_ANGLE_DEG;
+
+        int targetTicks = (int) Math.round(desiredAngleDeg * TURRET_TICKS_PER_DEGREE);
+
+        turretMotor.setTargetPosition(targetTicks);
+        turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turretMotor.setPower(TURRET_MOVE_POWER);
     }
 
     private int detectColourFromTwoSensors() {

@@ -23,8 +23,8 @@ import org.firstinspires.ftc.teamcode.hardware.PatternShooter;
 import java.util.List;
 
 @Config
-@Autonomous(name = "test", group = "Autonomous")
-public class AutoShootingBlue extends LinearOpMode {
+@Autonomous(name = "autoblue", group = "Autonomous")
+public class autoBlue extends LinearOpMode {
 
     // Dashboard input: fallback desired output pattern, e.g. "PPG", "PGP", "GPG"
     public static String TARGET_PATTERN = "PPG";
