@@ -4,6 +4,8 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 public class Turret{
 
@@ -14,13 +16,12 @@ public class Turret{
 
     // Motor movement tuning
     private static final int POSITION_TOLERANCE = 5;
-    private static final double MOVE_POWER = 0.4;
-
-    public Turret(DcMotorEx turretMotor) {
-        this.turretMotor = turretMotor;
-
+    private static final double MOVE_POWER = 0.5;
+    public Turret(HardwareMap hardwareMap) {
+        turretMotor = hardwareMap.get(DcMotorEx.class, "turretPositionMotor");
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turretMotor.setTargetPositionTolerance(POSITION_TOLERANCE);
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     // ----------- INTERNAL MOVE METHOD (do not call directly in Auto) -----------
@@ -67,8 +68,23 @@ public class Turret{
         return moveToAngleInternal(45);
     }
 
-    public Action turretAngleMinus45() {
-        return moveToAngleInternal(-45);
+    public Action turretAngleMinus48() {
+        return moveToAngleInternal(-48);
+    }
+    public Action turretAngleMinus50() {
+        return moveToAngleInternal(-50);
+    }
+    public Action turretAngleMinus90() {
+        return moveToAngleInternal(-90);
+    }
+    public Action turretAngle48() {
+        return moveToAngleInternal(48);
+    }
+    public Action turretAngle50() {
+        return moveToAngleInternal(50);
+    }
+    public Action turretAngle90() {
+        return moveToAngleInternal(90);
     }
 
 }

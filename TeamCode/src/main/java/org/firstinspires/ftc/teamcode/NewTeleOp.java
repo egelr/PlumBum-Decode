@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -13,6 +14,8 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+import java.util.List;
 
 @TeleOp(name = "NewTeleOp")
 public class NewTeleOp extends LinearOpMode {
@@ -67,7 +70,7 @@ public class NewTeleOp extends LinearOpMode {
     private boolean lastShootAllPressed = false;
 
     // Detection constants
-    private final double BALL_DETECT_DISTANCE = 2.0;
+    private final double BALL_DETECT_DISTANCE = 3.0;
     private final long BALL_COOLDOWN_MS = 200;
     private final ElapsedTime ballTimer = new ElapsedTime();
 
@@ -148,7 +151,7 @@ public class NewTeleOp extends LinearOpMode {
 
         // ----------------------------- TURRET SETUP -----------------------------
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretPositionMotor");
-        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setTargetPosition(TURRET_POS_CENTER);
         turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -209,8 +212,20 @@ public class NewTeleOp extends LinearOpMode {
                 // 1) Aim turret at AprilTag ONLY when we are about to shoot
                 aimTurretAtAprilTag();
 
+                sorterLeftServo.setPosition(Variables.sorter3Position);
+                sorterRightServo.setPosition(Variables.sorter3Position + Variables.sorterOffset);
+                transferShootPulse();
+                sorterLeftServo.setPosition(Variables.sorter2Position);
+                sorterRightServo.setPosition(Variables.sorter2Position + Variables.sorterOffset);
+                transferShootPulse();
+                sorterLeftServo.setPosition(Variables.sorter1Position);
+                sorterRightServo.setPosition(Variables.sorter1Position + Variables.sorterOffset);
+                transferShootPulse();
+
+
+
                 // 2) Current physical rotation of sorter
-                int currentPocketIndex = sorterPositionIndex;
+                /*int currentPocketIndex = sorterPositionIndex;
 
                 // Decide order based on where the sorter is now:
                 // 1 -> 1,2,3
@@ -233,7 +248,7 @@ public class NewTeleOp extends LinearOpMode {
 
                     moveSorterToIndex(idx);
                     transferShootPulse();
-                }
+                }*/
 
                 // Reset memory + sorter + state
                 ball1 = ball2 = ball3 = -1;
@@ -258,6 +273,8 @@ public class NewTeleOp extends LinearOpMode {
             if (gamepad1.dpad_down) targetVelocity -= 2;
 
             if (gamepad1.guide) {
+                turretMotor.setTargetPosition(0);
+                turretMotor.setPower(0.1);
                 targetVelocity = 0;
                 shooterAnglePos = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
@@ -374,11 +391,11 @@ public class NewTeleOp extends LinearOpMode {
     // ----------------------------- HELPER FUNCTIONS -----------------------------
 
     private void transferShootPulse() {
-        sleep(300);
+        sleep(400);
         transferOutputServo.setPosition(Variables.transferUpPosition);
-        sleep(200);
+        sleep(350);
         transferOutputServo.setPosition(Variables.transferDownPosition);
-        sleep(200);
+        sleep(350);
     }
 
     // Move sorter to physical pocket and update index
@@ -416,11 +433,14 @@ public class NewTeleOp extends LinearOpMode {
         if (!hasTarget) return;
 
         double tx = result.getTx();  // horizontal offset (deg)
-
+        List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
+        int tag = tags.get(0).getFiducialId();
         // Limelight: tx > 0 => tag to the RIGHT of crosshair
         // Turret: negative ticks = right, positive = left
         // To turn turret toward tag, we negate tx:
-        double desiredAngleDeg = -tx;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
+        double desiredAngleDeg = -tx;
+        if (tag == 20) desiredAngleDeg +=7;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
+        if (tag == 24) desiredAngleDeg -=7;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
 
         // Clamp angle
         if (desiredAngleDeg > TURRET_MAX_ANGLE_DEG)  desiredAngleDeg = TURRET_MAX_ANGLE_DEG;

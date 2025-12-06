@@ -37,20 +37,20 @@ public class Intake {
     public  Action IntakeOff() {
         return new Intake.IntakeOff();
     }
-    public class IntakeOn implements Action {
+    public class IntakeBack implements Action {
         private boolean initialized = false;
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
-                intakeMotor.setPower(1);
+                intakeMotor.setPower(-1);
                 //timer.reset();
                 initialized = true;
             }
             return false;
         }
     }
-    public  Action IntakeOn() {
-        return new Intake.IntakeOn();
+    public  Action IntakeBack() {
+        return new Intake.IntakeBack();
     }
     public class preset implements Action {
         @Override

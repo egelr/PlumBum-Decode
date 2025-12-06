@@ -57,12 +57,12 @@ import java.util.List;
 public final class MecanumDrive {
     public static class Params {
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 0.0019789925978;
+        public double inPerTick = 0.0029665063509461095;
         public double lateralInPerTick = inPerTick; //0.0022230657717982895; //inPerTick;
         public double trackWidthTicks = 6175.854728548721; //5868.083533484154;
 
@@ -242,7 +242,7 @@ public final class MecanumDrive {
         //lazyImu = new PinpointIMU(PinpointView);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick, pose);//PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);//ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
+        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);//TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick, pose);//PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);//ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }

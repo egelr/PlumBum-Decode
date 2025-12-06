@@ -90,6 +90,9 @@ public class Sorter {
         // Start at slot 1
         moveSorterToSlot(0);
 
+        /*ball1 =0;
+        ball2 =1;
+        ball3 =0;*/
 
         ballTimer.reset();
         sorterDelayTimer.reset();
@@ -174,9 +177,36 @@ public class Sorter {
     //  - Stop early if timeout hits 2 seconds
     // --------------------------------------------------
 
+    public class loadedBalls implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            ball1 = 0;
+            ball2 = 1;
+            ball3 = 0;
+        return false;
+        }
+
+    }
+    public Action loadedBalls() {
+        return new Sorter.loadedBalls();
+    }
+
 
     public Action intakeAndLoadThree() {
         return new IntakeAndLoadThreeAction();
+    }
+
+    public class preset implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            reset();
+            return false;
+        }
+
+    }
+
+    public Action preset() {
+        return new Sorter.preset();
     }
 
 
@@ -268,8 +298,6 @@ public class Sorter {
                         intakeMotor.setPower(0.0);
                         break;
                 }
-
-
                 ballTimer.reset();
                 waitingForSorterMove = false;
             }

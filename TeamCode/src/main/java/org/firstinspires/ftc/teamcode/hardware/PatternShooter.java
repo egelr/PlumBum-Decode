@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
+
 
 /**
  * Simplified PatternShooter:
@@ -39,9 +41,8 @@ public class PatternShooter {
      *
      * Will compute a slot order such as [0,2,1].
      */
-    public Action shootPatternMid(String targetPattern) {
-
-        String loaded = sorter.getPatternString(); // e.g. "PGP"
+    public Action shootPatternMid(String targetPattern, String loaded) {
+        //String loaded = sorter.getPatternString(); // e.g. "PGP"
         int[] order = computeOrder(targetPattern, loaded);
 
         return new SequentialAction(
@@ -49,9 +50,9 @@ public class PatternShooter {
 
                 shootOne(order[0]),
                 shootOne(order[1]),
-                shootOne(order[2]),
+                shootOne(order[2])
 
-                shooter.ShooterOff()  // stop shooter
+         //       shooter.ShooterOff()  // stop shooter
         );
     }
 
@@ -61,13 +62,13 @@ public class PatternShooter {
     private Action shootOne(int slot) {
         return new SequentialAction(
                 new MoveSorter(slot),
-                new SleepAction(1),
+                new SleepAction(0.8),
 
                 transfer.launch(),
-                new SleepAction(1),
+                new SleepAction(0.4),
 
                 transfer.preset(),
-                new SleepAction(1)
+                new SleepAction(0.4)
         );
     }
 
