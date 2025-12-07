@@ -62,7 +62,7 @@ public class PatternShooter {
     private Action shootOne(int slot) {
         return new SequentialAction(
                 new MoveSorter(slot),
-                new SleepAction(0.8),
+                new SleepAction(0.7),
 
                 transfer.launch(),
                 new SleepAction(0.4),

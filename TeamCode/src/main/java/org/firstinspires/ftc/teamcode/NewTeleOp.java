@@ -73,6 +73,8 @@ public class NewTeleOp extends LinearOpMode {
     private final double BALL_DETECT_DISTANCE = 3.0;
     private final long BALL_COOLDOWN_MS = 200;
     private final ElapsedTime ballTimer = new ElapsedTime();
+    private final ElapsedTime turretTimer = new ElapsedTime();
+
 
     // Sorter delay (non-blocking)
     private final ElapsedTime sorterDelayTimer = new ElapsedTime();
@@ -90,6 +92,8 @@ public class NewTeleOp extends LinearOpMode {
     private static final int TURRET_POS_CENTER = 0;
     private static final int TURRET_POS_RIGHT  = -232;
     private static final int TURRET_POS_LEFT   = 232;
+    private int turretPos = 0;
+
 
     private static final double TURRET_MAX_ANGLE_DEG = 90.0;
     private static final double TURRET_TICKS_PER_DEGREE = 232.0 / 90.0;  // ≈2.58
@@ -97,6 +101,7 @@ public class NewTeleOp extends LinearOpMode {
     private static final int TURRET_POSITION_TOLERANCE = 5;
     public static double TURRET_POSITION_P = 5.0;  // SDK PID P gain
     private static final double TURRET_MOVE_POWER = 0.5;
+    private  int turretreset = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -148,6 +153,7 @@ public class NewTeleOp extends LinearOpMode {
 
         ballTimer.reset();
         shooterStableTimer.reset();
+        turretTimer.reset();
 
         // ----------------------------- TURRET SETUP -----------------------------
         turretMotor = hardwareMap.get(DcMotorEx.class, "turretPositionMotor");
@@ -201,12 +207,34 @@ public class NewTeleOp extends LinearOpMode {
             }
 
             // ----------------------------- TRANSFER & SHOOT ALL -----------------------------
-            if (gamepad1.dpad_left) {
+            if (gamepad1.dpad_left && gamepad1.left_trigger < 0.5) {
                 transferOutputServo.setPosition(Variables.transferDownPosition);
             }
 
-            boolean shootAllPressed = gamepad1.dpad_right;
+            boolean shootAllPressed = gamepad1.dpad_right && gamepad1.left_trigger < 0.5;
+            if (gamepad1.dpad_left && gamepad1.left_trigger > 0.5)
+            {
+                turretPos = turretMotor.getCurrentPosition() +10;
+              turretMotor.setTargetPosition(turretPos);
+                sleep(50);
+               // turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            }
+            if (gamepad1.dpad_right && gamepad1.left_trigger > 0.5)
+            {turretPos = turretMotor.getCurrentPosition() -10;
+                turretMotor.setTargetPosition(turretPos);
+                turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                sleep(50);
 
+               // turretTimer.reset();
+            }
+            /*if turretTimer.milliseconds() < 500
+            {
+                turretMotor.setPower(0.5);
+
+            }*/
+            if (gamepad1.right_bumper && gamepad1.left_bumper){
+                turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            }
             if (shootAllPressed && !lastShootAllPressed && shooterReady) {
 
                 // 1) Aim turret at AprilTag ONLY when we are about to shoot
@@ -273,8 +301,6 @@ public class NewTeleOp extends LinearOpMode {
             if (gamepad1.dpad_down) targetVelocity -= 2;
 
             if (gamepad1.guide) {
-                turretMotor.setTargetPosition(0);
-                turretMotor.setPower(0.1);
                 targetVelocity = 0;
                 shooterAnglePos = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
@@ -370,8 +396,10 @@ public class NewTeleOp extends LinearOpMode {
 
             // Cut turret power when it has reached its target
             if (!turretMotor.isBusy()) {
-                turretMotor.setPower(0);
+                turretMotor.setPower(0.2);
+
             }
+            else turretMotor.setPower(0.5);
 
             // ----------------------------- TELEMETRY -----------------------------
             telemetry.addData("SorterState (balls stored)", sorterState);
@@ -384,6 +412,7 @@ public class NewTeleOp extends LinearOpMode {
             telemetry.addData("Target RPM", (targetVelocity / CPR) * 60);
             telemetry.addData("ShooterReady", shooterReady);
             telemetry.addData("Waiting Sorter Move", waitingForSorterMove);
+            telemetry.addData("turret pos", turretMotor.getCurrentPosition());
             telemetry.update();
         }
     }

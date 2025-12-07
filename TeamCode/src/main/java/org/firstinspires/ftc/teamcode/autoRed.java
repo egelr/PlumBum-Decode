@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.hardware.Intake;
 import org.firstinspires.ftc.teamcode.hardware.Sorter;
@@ -22,7 +24,8 @@ import org.firstinspires.ftc.teamcode.hardware.Shooter;
 import org.firstinspires.ftc.teamcode.hardware.PatternShooter;
 import org.firstinspires.ftc.teamcode.hardware.Turret;
 
-// make sure you have this drive class:
+// make sure you have this drive class import:
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import java.util.List;
 
@@ -62,16 +65,11 @@ public class autoRed extends LinearOpMode {
         limelight.start();                 // start vision
 
         // -------------------- TRAJECTORY (MIRRORED) --------------------
-        // Mirror across X axis: (x, y, θ) -> (x, -y, -θ)
-
         TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                // Blue: new Pose2d(-41, -15, +90°)
-                // Red:  new Pose2d(-41, +15, -90°)
-                .splineToSplineHeading(
-                        new Pose2d(-39.5, 15, Math.toRadians(-90)),
-                        Math.toRadians(0)
-                );
+                // Blue: strafeToLinearHeading(new Vector2d(-50, -18), +90°)
+                // Red:  strafeToLinearHeading(new Vector2d(-50,  18), -90°)
+                .strafeToLinearHeading(new Vector2d(-52, 18), Math.toRadians(-90));
 
         TrajectoryActionBuilder firstIntakingTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
                 .setReversed(false)
@@ -80,39 +78,35 @@ public class autoRed extends LinearOpMode {
                 .waitSeconds(0.1)
                 .lineToY(-1)
                 .waitSeconds(0.1)
-                .lineToY(-9);
+                .lineToY(-10);
 
         TrajectoryActionBuilder secondShootingTrajectory = firstIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(true)
                 // Blue: -17 -> Red: 17
-                .lineToY(20);
+                .lineToY(17);
 
         TrajectoryActionBuilder secondIntakingTrajectory = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: new Pose2d(-51, -10, +90°)
-                // Red:  new Pose2d(-51, +10, -90°)
-                .splineToSplineHeading(
-                        new Pose2d(-52, 14, Math.toRadians(-90)),
-                        Math.toRadians(180)
-                );
+                // Blue: (-77, -14, 92°) -> Red: (-77, 14, -92°)
+                .strafeToLinearHeading(new Vector2d(-77, 14), Math.toRadians(-92));
 
         TrajectoryActionBuilder secondIntakingTrajectory2 = secondIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: -8, -3, 5 -> Red: 8, 3, -5
+                // Blue: -8, -3, 8 -> Red: 8, 3, -8
                 .lineToY(8)
                 .waitSeconds(0.1)
                 .lineToY(3)
                 .waitSeconds(0.1)
-                .lineToY(-5);
+                .lineToY(-8);
 
         TrajectoryActionBuilder thirdShootingTrajectory = secondIntakingTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                // Blue: (-33, -25) -> Red: (-33, 25)
-                .strafeTo(new Vector2d(-30, 25));
+                // Blue: (-50, -17) -> Red: (-50, 17)
+                .strafeTo(new Vector2d(-50, 17));
 
         TrajectoryActionBuilder parkingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
                 .setReversed(true)
-                // Blue: (-50, 0) -> Red: (-50, 0) (y=0 stays the same)
+                // y=0 stays the same
                 .strafeTo(new Vector2d(-50, 0));
 
         Action cameraDetectionTrajectoryAction = cameraDetectionTrajectory.build();
@@ -145,8 +139,7 @@ public class autoRed extends LinearOpMode {
                 new SequentialAction(
                         sorter.loadedBalls(),
                         cameraDetectionTrajectoryAction,
-                        // Blue had turret.turretAngleMinus90()
-                        // Red mirror -> turret.turretAngle90() (you may need to implement this)
+                        // Blue: turretAngleMinus90() -> Red: turretAngle90()
                         turret.turretAngle90()
                 )
         );
@@ -165,36 +158,39 @@ public class autoRed extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        // Blue: turretAngleMinus48() -> Red: turretAngle48() (mirrored)
+                        // Blue: turretAngleMinus48() -> Red: turretAngle48()
                         turret.turretAngle48(),
                         patternShooter.shootPatternMid(desired, "PGP"),
                         sorter.preset(),
                         new ParallelAction(
                                 firstIntakingTrajectoryAction,
-                                sorter.intakeAndLoadThree()
+                                sorter.intakeAndLoadThree(),
+                                shooter.ShooterOn()
                         ),
                         new ParallelAction(
                                 intake.IntakeBack(),
                                 sorter.preset(),
-                                secondShootingTrajectoryAction),
+                                secondShootingTrajectoryAction
+                        ),
                         intake.IntakeOff(),
                         patternShooter.shootPatternMid(desired, "PPG"),
                         secondIntakingTrajectoryAction,
                         sorter.preset(),
                         new ParallelAction(
                                 secondIntakingTrajectory2Action,
-                                sorter.intakeAndLoadThree()
+                                sorter.intakeAndLoadThree(),
+                                shooter.ShooterOn()
                         ),
                         new ParallelAction(
                                 intake.IntakeBack(),
                                 sorter.preset(),
-                                thirdShootingTrajectoryAction),
+                                thirdShootingTrajectoryAction
+                        ),
                         intake.IntakeOff(),
-                        // Blue: turretAngleMinus50() -> Red: turretAngle50()
-                        turret.turretAngle48(),
                         patternShooter.shootPatternMid(desired, "PGP"),
                         new ParallelAction(
                                 parkingTrajectoryAction,
+                                turret.turretAngle0(),
                                 shooter.ShooterOff()
                         )
                 )
@@ -218,7 +214,6 @@ public class autoRed extends LinearOpMode {
         detectedPattern = null;
         detectedTagId = null;
         String pattern = null;
-
         while (opModeIsActive() && (System.currentTimeMillis() - startTime) < timeoutMs) {
             LLResult result = limelight.getLatestResult();
             if (result != null && result.isValid()) {
@@ -239,6 +234,7 @@ public class autoRed extends LinearOpMode {
             }
         }
 
+        // If we get here, no valid tag was mapped in time
         telemetry.addLine("No valid AprilTag detected in time, using fallback pattern.");
         telemetry.update();
         return pattern;

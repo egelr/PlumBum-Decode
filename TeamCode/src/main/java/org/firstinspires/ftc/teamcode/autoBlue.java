@@ -64,7 +64,8 @@ public class autoBlue extends LinearOpMode {
         // -------------------- TRAJECTORY --------------------
         TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                .splineToSplineHeading(new Pose2d(-41, -15,Math.toRadians(90)), Math.toRadians(0));
+                //.splineToSplineHeading(new Pose2d(-44, -18,Math.toRadians(90)), Math.toRadians(0))
+                .strafeToLinearHeading(new Vector2d(-50, -18), Math.toRadians(90));
         TrajectoryActionBuilder firstIntakingTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
                 .setReversed(false)
                 .lineToY(-6)
@@ -77,7 +78,7 @@ public class autoBlue extends LinearOpMode {
                 .lineToY(-17);
         TrajectoryActionBuilder secondIntakingTrajectory = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .splineToSplineHeading(new Pose2d(-59, -12,Math.toRadians(90)), Math.toRadians(180));
+                .strafeToLinearHeading(new Vector2d(-77, -14), Math.toRadians(92));
         TrajectoryActionBuilder secondIntakingTrajectory2 = secondIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
                 .lineToY(-8)
@@ -87,7 +88,7 @@ public class autoBlue extends LinearOpMode {
                 .lineToY(8);
         TrajectoryActionBuilder thirdShootingTrajectory = secondIntakingTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(-33, -25));
+                .strafeTo(new Vector2d(-50, -17));
         TrajectoryActionBuilder parkingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
                 .setReversed(true)
                 .strafeTo(new Vector2d(-50, 0));
@@ -158,7 +159,8 @@ public class autoBlue extends LinearOpMode {
                         sorter.preset(),
                         new ParallelAction(
                                 firstIntakingTrajectoryAction,
-                                sorter.intakeAndLoadThree()
+                                sorter.intakeAndLoadThree(),
+                                shooter.ShooterOn()
                         ),
                         new ParallelAction(
                                 intake.IntakeBack(),
@@ -170,7 +172,8 @@ public class autoBlue extends LinearOpMode {
                         sorter.preset(),
                         new ParallelAction(
                                 secondIntakingTrajectory2Action,
-                                sorter.intakeAndLoadThree()
+                                sorter.intakeAndLoadThree(),
+                                shooter.ShooterOn()
                         ),
                         new ParallelAction(
                                 intake.IntakeBack(),
@@ -180,6 +183,7 @@ public class autoBlue extends LinearOpMode {
                         patternShooter.shootPatternMid(desired,"PGP"),
                         new ParallelAction(
                                 parkingTrajectoryAction,
+                                turret.turretAngle0(),
                                 shooter.ShooterOff()
                         )
                         )
