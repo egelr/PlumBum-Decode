@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleOpModes;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Variables;
 
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class NewTeleOp extends LinearOpMode {
     // Sorter + transfer
     private Servo sorterLeftServo;
     private Servo sorterRightServo;
-    private Servo transferOutputServo;
+    private Servo kickerTopServo, kickerBottomServo;
 
     // Sensors
     private ColorSensor sensorColorFront;
@@ -136,8 +137,8 @@ public class NewTeleOp extends LinearOpMode {
         shooterAngleServo.setPosition(shooterAnglePos);
 
         // ----------------------------- SERVOS + SENSORS -----------------------------
-        transferOutputServo = hardwareMap.get(Servo.class, "transferOutputServo");
-        sorterLeftServo = hardwareMap.get(Servo.class, "sorterLeftServo");
+        kickerTopServo = hardwareMap.get(Servo.class, "kickerTopServo");
+        kickerBottomServo = hardwareMap.get(Servo.class, "kickerBottomServo");        sorterLeftServo = hardwareMap.get(Servo.class, "sorterLeftServo");
         sorterRightServo = hardwareMap.get(Servo.class, "sorterRightServo");
 
         sensorColorFront = hardwareMap.get(ColorSensor.class, "colourSensorFront");
@@ -149,7 +150,8 @@ public class NewTeleOp extends LinearOpMode {
         // Set neutral sorter position (pocket 1)
         moveSorterToIndex(1);
 
-        transferOutputServo.setPosition(Variables.transferDownPosition);
+        kickerTopServo.setPosition(0.99);
+        kickerBottomServo.setPosition(0.99);
 
         ballTimer.reset();
         shooterStableTimer.reset();
@@ -208,8 +210,8 @@ public class NewTeleOp extends LinearOpMode {
 
             // ----------------------------- TRANSFER & SHOOT ALL -----------------------------
             if (gamepad1.dpad_left && gamepad1.left_trigger < 0.5) {
-                transferOutputServo.setPosition(Variables.transferDownPosition);
-            }
+                kickerTopServo.setPosition(0.99);
+                kickerBottomServo.setPosition(0.99);            }
 
             boolean shootAllPressed = gamepad1.dpad_right && gamepad1.left_trigger < 0.5;
             if (gamepad1.dpad_left && gamepad1.left_trigger > 0.5)
@@ -240,14 +242,14 @@ public class NewTeleOp extends LinearOpMode {
                 // 1) Aim turret at AprilTag ONLY when we are about to shoot
                 aimTurretAtAprilTag();
 
-                sorterLeftServo.setPosition(Variables.sorter3Position);
-                sorterRightServo.setPosition(Variables.sorter3Position + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.54);
+                sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
                 transferShootPulse();
-                sorterLeftServo.setPosition(Variables.sorter2Position);
-                sorterRightServo.setPosition(Variables.sorter2Position + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.93);
+                sorterRightServo.setPosition(0.93 + Variables.sorterOffset);
                 transferShootPulse();
-                sorterLeftServo.setPosition(Variables.sorter1Position);
-                sorterRightServo.setPosition(Variables.sorter1Position + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.16);
+                sorterRightServo.setPosition(0.16 + Variables.sorterOffset);
                 transferShootPulse();
 
 
@@ -421,10 +423,11 @@ public class NewTeleOp extends LinearOpMode {
 
     private void transferShootPulse() {
         sleep(400);
-        transferOutputServo.setPosition(Variables.transferUpPosition);
+        kickerTopServo.setPosition(0.85);
+        kickerBottomServo.setPosition(0.85);
         sleep(350);
-        transferOutputServo.setPosition(Variables.transferDownPosition);
-        sleep(350);
+        kickerTopServo.setPosition(0.99);
+        kickerBottomServo.setPosition(0.99);        sleep(350);
     }
 
     // Move sorter to physical pocket and update index

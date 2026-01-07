@@ -57,7 +57,7 @@ import java.util.List;
 public final class MecanumDrive {
     public static class Params {
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+                RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
