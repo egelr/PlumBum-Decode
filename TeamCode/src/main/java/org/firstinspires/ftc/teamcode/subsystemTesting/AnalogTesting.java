@@ -38,8 +38,8 @@ public class AnalogTesting extends LinearOpMode {
 
             // ---------------- KICKER TESTING ----------------
             if (gamepad1.triangle) {
-                kickerTopServo.setPosition(0.90);
-                kickerBottomServo.setPosition(0.90);
+                kickerTopServo.setPosition(0.88);
+                kickerBottomServo.setPosition(0.88);
             }
             if (gamepad1.circle) {
                 kickerTopServo.setPosition(0.99);
