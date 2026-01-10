@@ -447,7 +447,7 @@ public class NewTeleOp extends LinearOpMode {
         turretDeg += turretServo.getPosition()*360/(84/35);
 
 
-        
+
         double servoPos = turretAngleDegToServoPos(turretDeg);
         turretServo.setPosition(servoPos);
     }
