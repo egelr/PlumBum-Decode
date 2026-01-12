@@ -136,9 +136,9 @@ public class autoRed extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         sorter.loadedBalls(),
-                        cameraDetectionTrajectoryAction,
+                        cameraDetectionTrajectoryAction
                         // Blue: turretAngleMinus90() -> Red: turretAngle90()
-                        turret.turretAngle90()
+                        //turret.turretAngle90()
                 )
         );
 
@@ -157,7 +157,7 @@ public class autoRed extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         // Blue: turretAngleMinus48() -> Red: turretAngle48()
-                        turret.turretAngle48(),
+                        //turret.turretAngle48(),
                         patternShooter.shootPatternMid(desired, "PGP"),
                         sorter.preset(),
                         new ParallelAction(
@@ -188,7 +188,7 @@ public class autoRed extends LinearOpMode {
                         patternShooter.shootPatternMid(desired, "PGP"),
                         new ParallelAction(
                                 parkingTrajectoryAction,
-                                turret.turretAngle0(),
+                                //turret.turretAngle0(),
                                 shooter.ShooterOff()
                         )
                 )

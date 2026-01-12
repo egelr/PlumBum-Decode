@@ -2,13 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 public class Variables {
 
-    //Variables for TeleOP and Autonomous
-    public static final double transferBoxLaunch = 0.67;
-    public static final double transferBoxPreset = 0.885;
-    public static final double transferBlockOpened = 0.6;
-    public static final double transferBlockClosed = 0.38;
-    public static final double sleepAfterLaunch = 0.4;
-    public static final double sleepAfterPreset = 0.6;
     public static final double sorterOffset = 0.05;  // right servo offset
     public static final double sorter1Position = 0;
     public static final double sorter2Position = 0.375;
@@ -17,10 +10,14 @@ public class Variables {
     public static final double transferUpPosition = 0.22;
     public static final double shooterSpeedNear = 0.6;
     public static final double shooterSpeedMid = 0.64;
-    public static final double shooterSpeedFar = 0.83;
+    public static final double shooterSpeedFar = 0.8;
+    public static double shooter_kP = 0.00025;  // start here
+    public static double shooter_kI = 0.0;
+    public static double shooter_kD = 0.0;
+    public static double shooter_kF = 1.0;      // start at 1.0
     public static final double shooterAngleNear = 0.15;
-    public static final double shooterAngleMid = 0.24;
-    public static final double shooterAngleFar = 0.25;
+    public static final double shooterAngleMid = 0.25;
+    public static final double shooterAngleFar = 0.27;
 
 
 

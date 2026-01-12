@@ -2,9 +2,9 @@ package org.firstinspires.ftc.teamcode.teleOpModes;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -52,9 +52,7 @@ public class NewTeleOp extends LinearOpMode {
 
     private AnalogInput kickerAnalog, sorterAnalog;
 
-    // ---- Your measured voltages (midpoints) ----
     private static final double KICKER_DOWN_V = 3.0025;
-    // IMPORTANT: you measured 2.749–2.750, so midpoint is 2.7495 (your old code had wrong 2.6975)
     private static final double KICKER_UP_V   = 2.7495;
 
     private static final double SORTER_INTAKE_1_V  = 0.2200;
@@ -65,19 +63,15 @@ public class NewTeleOp extends LinearOpMode {
     private static final double SORTER_OUTTAKE_2_V = 2.8405;
     private static final double SORTER_OUTTAKE_3_V = 0.6715;
 
-    // Tolerances (tune)
-    private static final double KICKER_V_TOL = 0.030; // slightly bigger than 0.020 for stability
+    private static final double KICKER_V_TOL = 0.030;
     private static final double SORTER_V_TOL = 0.030;
 
-    // Timeouts (ms)
     private static final long KICKER_TIMEOUT_MS = 350;
     private static final long SORTER_TIMEOUT_MS = 450;
 
-    // Kicker pulse “debounce” + minimum down time to prevent early up
-    private static final long KICKER_STABLE_MS = 25;     // must be in tolerance continuously for this long
-    private static final long KICKER_MIN_DOWN_MS = 70;   // must stay down at least this long
+    private static final long KICKER_STABLE_MS = 25;
+    private static final long KICKER_MIN_DOWN_MS = 70;
 
-    // Intake power while outtaking (shoot all)
     private static final double OUTTAKE_INTAKE_POWER = 0.4;
     private boolean intakeWasEnabledBeforeShootAll = false;
 
@@ -112,28 +106,22 @@ public class NewTeleOp extends LinearOpMode {
     private KickerPulseState kickerPulseState = KickerPulseState.IDLE;
 
     private final ElapsedTime kickerPulseTimer = new ElapsedTime();
-    private final ElapsedTime kickerStableTimer = new ElapsedTime(); // time continuously in tolerance
+    private final ElapsedTime kickerStableTimer = new ElapsedTime();
     private boolean kickerStableRunning = false;
 
     private boolean shootAllRunning = false;
     private int shootAllStep = 0;
 
-    // ----------------------------- TURRET + LIMELIGHT (SERVO) -----------------------------
+    // ----------------------------- TURRET + LIMELIGHT (EXACT LIKE YOUR EXAMPLE) -----------------------------
     private Servo turretServo;
     private Limelight3A limelight;
 
-    // This maps turret degrees to servo [0..1] (same constants your teammate used)
-    private static final double TURRET_ZERO_OFFSET_DEG = 0.5;
-    private static final double SERVO_RANGE_DEG = 360.0;
-    private static final double GEAR_RATIO = 84.0 / 35.0;
+    // turretDeg = servoDeg * (35/84)  => servoDeg = turretDeg / (35/84)
+    private static final double GEAR_RATIO = 35.0 / 84.0;
 
-    // Limit turret physical sweep you allow
-    private static final double TURRET_MIN_DEG = -76.0;
-    private static final double TURRET_MAX_DEG =  76.0;
+    private static final double DIR = +1.0;
 
-    // Optional per-tag offsets if your tag mounts differ (like you had before)
-    private static final double TAG20_OFFSET_DEG = 7.0;
-    private static final double TAG24_OFFSET_DEG = -7.0;
+    private static final int TARGET_TAG_ID = -1; // -1 = first seen
 
     // Vision telemetry
     private boolean tagVisible = false;
@@ -171,7 +159,6 @@ public class NewTeleOp extends LinearOpMode {
         shooterRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         shooterAngleServo = hardwareMap.get(Servo.class, "shooterAngleServo");
-        shooterAngleServo.setPosition(shooterAnglePos);
 
         // ----------------------------- SORTER + KICKER -----------------------------
         kickerTopServo = hardwareMap.get(Servo.class, "kickerTopServo");
@@ -189,24 +176,22 @@ public class NewTeleOp extends LinearOpMode {
         sensorColorBack = hardwareMap.get(ColorSensor.class, "colourSensorBack");
         sensorDistanceBack = hardwareMap.get(DistanceSensor.class, "colourSensorBack");
 
-        requestSorterMoveToIndexIntake(1);
+        /*requestSorterMoveToIndexIntake(1);
 
-        // Start kicker UP
         kickerTopServo.setPosition(0.99);
-        kickerBottomServo.setPosition(0.99);
+        kickerBottomServo.setPosition(0.99);*/
 
         ballTimer.reset();
         shooterStableTimer.reset();
 
-        // ----------------------------- TURRET SERVO -----------------------------
+        // ----------------------------- TURRET -----------------------------
         turretServo = hardwareMap.get(Servo.class, "turretServo");
-        turretServo.setPosition(0.5);
 
         // ----------------------------- LIMELIGHT -----------------------------
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         telemetry.setMsTransmissionInterval(11);
         limelight.setPollRateHz(100);
-        limelight.pipelineSwitch(0); // you said pipeline 0
+        limelight.pipelineSwitch(0);
         limelight.start();
 
         telemetry.addLine("Ready!");
@@ -227,7 +212,7 @@ public class NewTeleOp extends LinearOpMode {
 
             // ----------------------------- INTAKE -----------------------------
             if (!shootAllRunning) {
-                if (gamepad1.triangle) { intakeMotor.set(1); intakeEnabled = true; }
+                if (gamepad1.triangle) { intakeMotor.set(1); sorterLeftServo.setPosition(0); sorterRightServo.setPosition(0 + Variables.sorterOffset); intakeEnabled = true; }
                 if (gamepad1.cross)    { intakeMotor.set(0); intakeEnabled = false; }
                 if (gamepad1.left_bumper) { intakeMotor.set(-1); intakeEnabled = false; }
             }
@@ -244,8 +229,9 @@ public class NewTeleOp extends LinearOpMode {
             boolean shootAllPressed = gamepad1.dpad_right && gamepad1.left_trigger < 0.5;
 
             if (shootAllPressed && !lastShootAllPressed && shooterReady && !shootAllRunning) {
-                // Aim using TX like your old CameraTest
-                aimTurretUsingTx();
+
+                // EXACT one-time detection + aim like your example
+                aimAtTagSnap_ExactlyLikeExample();
 
                 intakeWasEnabledBeforeShootAll = intakeEnabled;
                 intakeMotor.set(OUTTAKE_INTAKE_POWER);
@@ -278,7 +264,9 @@ public class NewTeleOp extends LinearOpMode {
                 targetVelocity = 0;
                 shooterAnglePos = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
-                intakeMotor.set(0.6);
+                turretServo.setPosition(0.5);
+                kickerTopServo.setPosition(0.99);
+                kickerBottomServo.setPosition(0.99);
             }
 
             if (gamepad1.share && shooterAnglePos > 0.05) {
@@ -354,6 +342,8 @@ public class NewTeleOp extends LinearOpMode {
                             case 2:
                                 ball3 = pendingColor;
                                 sorterState = 3;
+                                sorterLeftServo.setPosition(0.54);
+                                sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
                                 intakeMotor.set(0);
                                 intakeEnabled = false;
                                 break;
@@ -388,7 +378,6 @@ public class NewTeleOp extends LinearOpMode {
             telemetry.addData("ShootAllRunning", shootAllRunning);
             telemetry.addData("ShootAllStep", shootAllStep);
 
-            // Vision telemetry
             telemetry.addData("TagVisible", tagVisible);
             telemetry.addData("TagID", currentTagId);
             telemetry.addData("tx", "%.2f", lastTx);
@@ -400,63 +389,64 @@ public class NewTeleOp extends LinearOpMode {
         }
     }
 
-    // ----------------------------- VISION AIM USING TX (LIKE YOUR OLD CODE) -----------------------------
+    // ----------------------------- TURRET AIM (EXACT LIKE YOUR EXAMPLE) -----------------------------
 
-    private void aimTurretUsingTx() {
+    private void aimAtTagSnap_ExactlyLikeExample() {
+
         tagVisible = false;
         currentTagId = -1;
         lastTx = 0.0;
         lastArea = 0.0;
 
         LLResult result = limelight.getLatestResult();
-        if (result == null || !result.isValid()) return;
+        if (result == null || !result.isValid()) {
+            // same behavior: just return
+            return;
+        }
 
         List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-        if (fiducials == null || fiducials.isEmpty()) return;
+        if (fiducials == null || fiducials.isEmpty()) {
+            return;
+        }
 
-        // Pick best tag (20/24) by largest area (more stable than first element)
-        LLResultTypes.FiducialResult best = null;
-        double bestArea = -1;
-
-        for (LLResultTypes.FiducialResult f : fiducials) {
-            int id = f.getFiducialId();
-            if (id != 20 && id != 24) continue;
-
-            double area = f.getTargetArea(); // same as your CameraTest
-            if (best == null || area > bestArea) {
-                best = f;
-                bestArea = area;
+        // Pick tag EXACTLY like your example
+        LLResultTypes.FiducialResult tag = null;
+        if (TARGET_TAG_ID < 0) {
+            tag = fiducials.get(0);
+        } else {
+            for (LLResultTypes.FiducialResult f : fiducials) {
+                if (f != null && f.getFiducialId() == TARGET_TAG_ID) {
+                    tag = f;
+                    break;
+                }
             }
         }
 
-        if (best == null) return;
+        if (tag == null) {
+            return;
+        }
 
         tagVisible = true;
-        currentTagId = best.getFiducialId();
-        lastTx = best.getTargetXDegrees();
-        lastArea = bestArea;
+        currentTagId = tag.getFiducialId();
 
-        // Convert camera tx -> turret correction
-        // If tx is positive to the right, you usually want turretDeg = -tx to correct.
-        double turretDeg = -lastTx;
+        // Horizontal angle error to tag (degrees). Want tx -> 0 when centered.
+        double txDeg = tag.getTargetXDegrees();
+        lastTx = txDeg;
+        lastArea = tag.getTargetArea();
 
-        // Optional corner offsets (if you want them)
-        //if (currentTagId == 20) turretDeg; += TAG20_OFFSET_DEG;
-        //if (currentTagId == 24) turretDeg += TAG24_OFFSET_DEG;
+        // Convert txDeg into a turret correction (EXACT)
+        double turretDeg = (-txDeg) * DIR;
+        int tagid = tag.getFiducialId();
+        if (tagid == 20) turretDeg += 4;
+        if (tagid == 24) turretDeg -= 4;
 
-        turretDeg += turretServo.getPosition()*360/(84/35);
+        // turretDeg -> servoDeg using gear ratio (EXACT)
+        double servoDeg = turretDeg / GEAR_RATIO / 360.0;
 
+        // 360° servo: degrees -> position 0..1 (EXACT)
+        double servoPos = turretServo.getPosition() + servoDeg;
 
-
-        double servoPos = turretAngleDegToServoPos(turretDeg);
         turretServo.setPosition(servoPos);
-    }
-
-    private double turretAngleDegToServoPos(double turretDeg) {
-        turretDeg = Math.max(TURRET_MIN_DEG, Math.min(TURRET_MAX_DEG, turretDeg));
-        double servoDeg = turretDeg * GEAR_RATIO;
-        double servoPos = servoDeg / SERVO_RANGE_DEG;
-        return Math.max(0.0, Math.min(1.0, servoPos));
     }
 
     // ----------------------------- KICKER: STABLE-IN-TOLERANCE CHECK -----------------------------
@@ -465,7 +455,6 @@ public class NewTeleOp extends LinearOpMode {
         return Math.abs(v - target) <= tol;
     }
 
-    // Returns true only if we've stayed within tolerance for KICKER_STABLE_MS continuously
     private boolean stableAtTarget(double v, double target, double tol) {
         boolean inTol = withinTol(v, target, tol);
 
@@ -507,7 +496,6 @@ public class NewTeleOp extends LinearOpMode {
                 boolean minDownTimeOk = kickerPulseTimer.milliseconds() >= KICKER_MIN_DOWN_MS;
                 boolean timedOut = kickerPulseTimer.milliseconds() > KICKER_TIMEOUT_MS;
 
-                // Must satisfy minimum down time AND stable-at-target (or timeout as fallback)
                 if ((reachedDownStable && minDownTimeOk) || timedOut) {
                     kickerPulseState = KickerPulseState.COMMAND_UP;
                     kickerStableRunning = false;
@@ -609,17 +597,6 @@ public class NewTeleOp extends LinearOpMode {
     // ----------------------------- SHOOT ALL SEQUENCE -----------------------------
 
     private void updateShootAllSequence() {
-        // 0 move to outtake1
-        // 1 wait sorter
-        // 2 pulse
-        // 3 move outtake2
-        // 4 wait sorter
-        // 5 pulse
-        // 6 move outtake3
-        // 7 wait sorter
-        // 8 pulse
-        // 9 reset + go intake1
-
         switch (shootAllStep) {
 
             case 0:
@@ -670,14 +647,11 @@ public class NewTeleOp extends LinearOpMode {
                     requestSorterMoveToIndexIntake(1);
 
                     shootAllRunning = false;
+                    intakeMotor.set(1.0);
+                    intakeEnabled = true;
+                    turretServo.setPosition(0.5);
+                    targetVelocity = 0;
 
-                    if (intakeWasEnabledBeforeShootAll) {
-                        intakeMotor.set(1.0);
-                        intakeEnabled = true;
-                    } else {
-                        intakeMotor.set(0.0);
-                        intakeEnabled = false;
-                    }
                 }
                 break;
         }

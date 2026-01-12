@@ -37,10 +37,12 @@ public class AnalogTesting extends LinearOpMode {
         while (opModeIsActive()) {
 
             // ---------------- KICKER TESTING ----------------
+            //up
             if (gamepad1.triangle) {
                 kickerTopServo.setPosition(0.88);
                 kickerBottomServo.setPosition(0.88);
             }
+            //down
             if (gamepad1.circle) {
                 kickerTopServo.setPosition(0.99);
                 kickerBottomServo.setPosition(0.99);
@@ -51,15 +53,16 @@ public class AnalogTesting extends LinearOpMode {
             }
 
             // ---------------- SORTER TESTING (example controls) ----------------
-
+//intake first
             if (gamepad1.dpad_down) {
                 sorterLeftServo.setPosition(0.0);
                 sorterRightServo.setPosition(0.0 + Variables.sorterOffset);
             }
+            //intake second
             if (gamepad1.dpad_left) {
                 sorterLeftServo.setPosition( 0.375);
                 sorterRightServo.setPosition( 0.375 + Variables.sorterOffset);
-            }
+            }//intake third
             if (gamepad1.dpad_right) {
                 sorterLeftServo.setPosition(0.76);
                 sorterRightServo.setPosition(0.76 + Variables.sorterOffset);

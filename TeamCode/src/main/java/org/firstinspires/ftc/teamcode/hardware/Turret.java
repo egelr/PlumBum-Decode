@@ -1,90 +1,65 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import com.acmerobotics.roadrunner.Action;
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class Turret{
-
-    private final DcMotorEx turretMotor;
-
-    // 45° offset equals 232 ticks → convert degrees to ticks
-    public static final double TICKS_PER_DEGREE = 232.0 / 90.0;
-
-    // Motor movement tuning
-    private static final int POSITION_TOLERANCE = 5;
-    private static final double MOVE_POWER = 0.5;
+import org.firstinspires.ftc.teamcode.Variables;
+public class Turret {
+    private Servo turretServo;
+    private ElapsedTime timer = new ElapsedTime();
+    private boolean initialized = false;
     public Turret(HardwareMap hardwareMap) {
-        turretMotor = hardwareMap.get(DcMotorEx.class, "turretPositionMotor");
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turretMotor.setTargetPositionTolerance(POSITION_TOLERANCE);
-        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretServo = hardwareMap.get(Servo.class, "turretServo");
     }
 
-    // ----------- INTERNAL MOVE METHOD (do not call directly in Auto) -----------
-    private Action moveToAngleInternal(double degrees) {
-        int targetTicks = (int) Math.round(degrees * TICKS_PER_DEGREE);
-
-        return new Action() {
-
-            boolean init = false;
-
-            @Override
-            public boolean run(TelemetryPacket packet) {
-
-                if (!init) {
-                    turretMotor.setTargetPosition(targetTicks);
-                    turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    turretMotor.setPower(MOVE_POWER);
-                    init = true;
-                }
-
-                if (packet != null) {
-                    packet.put("Turret Target", targetTicks);
-                    packet.put("Turret Current", turretMotor.getCurrentPosition());
-                    packet.put("Busy", turretMotor.isBusy());
-                }
-
-                if (!turretMotor.isBusy()) {
-                    turretMotor.setPower(0);
-                    return false; // finished
-                }
-
-                return true; // keep going
-            }
-        };
+    public class right implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(1);
+            return false;
+        }
     }
 
-    // ----------- PUBLIC ACTIONS YOU WILL CALL IN AUTO -----------
-
-    public Action turretAngle0() {
-        return moveToAngleInternal(0);
+    public Action right() {
+        return new Turret.right();
+    }
+    public class halfLeft implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0.9);
+            return false;
+        }
     }
 
-    public Action turretAngle45() {
-        return moveToAngleInternal(45);
+    public Action halfLeft() {
+        return new Turret.halfLeft();
+    }
+    public class left implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0);
+            return false;
+        }
     }
 
-    public Action turretAngleMinus48() {
-        return moveToAngleInternal(-48);
+    public Action left() {
+        return new Turret.right();
     }
-    public Action turretAngleMinus50() {
-        return moveToAngleInternal(-50);
-    }
-    public Action turretAngleMinus90() {
-        return moveToAngleInternal(-90);
-    }
-    public Action turretAngle48() {
-        return moveToAngleInternal(48);
-    }
-    public Action turretAngle50() {
-        return moveToAngleInternal(50);
-    }
-    public Action turretAngle90() {
-        return moveToAngleInternal(90);
+    public class preset implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0.5);
+            return false;
+        }
+
     }
 
+    public Action preset() {
+        return new Turret.preset();
+    }
 }
