@@ -24,7 +24,7 @@ import org.firstinspires.ftc.teamcode.hardware.Turret;
 import org.firstinspires.ftc.teamcode.hardware.AprilTagDetector;
 
 @Config
-@Autonomous(name = "autored", group = "Autonomous")
+@Autonomous(name = "RED", group = "Autonomous")
 public class autoRed extends LinearOpMode {
 
     // Fallback desired output pattern if no tag is mapped
@@ -53,13 +53,10 @@ public class autoRed extends LinearOpMode {
         // -------------------- LIMELIGHT (WORKING-STYLE DETECTOR) --------------------
         Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
         AprilTagDetector detector = new AprilTagDetector(limelight, telemetry);
-        //detector.init(); // same as your old working setup: pollRate, pipelineSwitch, start
 
         // -------------------- TRAJECTORY (SIMPLE TEST) --------------------
         TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                // Blue: strafeToLinearHeading(new Vector2d(-50, -18), +90°)
-                // Red:  strafeToLinearHeading(new Vector2d(-50,  18), -90°)
                 .strafeToLinearHeading(new Vector2d(-52, 18), Math.toRadians(-90));
 
         TrajectoryActionBuilder firstIntakingTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
@@ -78,12 +75,10 @@ public class autoRed extends LinearOpMode {
 
         TrajectoryActionBuilder secondIntakingTrajectory = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: (-77, -14, 92°) -> Red: (-77, 14, -92°)
                 .strafeToLinearHeading(new Vector2d(-77, 14), Math.toRadians(-93.5));
 
         TrajectoryActionBuilder secondIntakingTrajectory2 = secondIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: -8, -3, 8 -> Red: 8, 3, -8
                 .lineToY(8)
                 .waitSeconds(0.1)
                 .lineToY(3.5)
@@ -92,16 +87,13 @@ public class autoRed extends LinearOpMode {
 
         TrajectoryActionBuilder thirdShootingTrajectory = secondIntakingTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                // Blue: (-50, -17) -> Red: (-50, 17)
                 .strafeTo(new Vector2d(-48, 20));
 
         TrajectoryActionBuilder thirdIntakingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: (-77, -14, 92°) -> Red: (-77, 14, -92°)
                 .strafeToLinearHeading(new Vector2d(-102, 14), Math.toRadians(-95));
         TrajectoryActionBuilder thirdIntakingTrajectory2 = thirdIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: -8, -3, 8 -> Red: 8, 3, -8
                 .lineToY(10)
                 .waitSeconds(0.1)
                 .lineToY(4)
@@ -123,17 +115,9 @@ public class autoRed extends LinearOpMode {
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
-            //Integer previewId = detector.getTagIdFromLimelightOnce();
-            //String previewPattern = AprilTagDetector.mapTagIdToPattern(previewId);
-
-            //telemetry.addData("Preview Tag ID", previewId);
-            //telemetry.addData("Preview Pattern (mapped)", previewPattern);
             telemetry.addData("Fallback Pattern", TARGET_PATTERN);
-
-            // Also show globals (should be null in init unless you call detect)
             telemetry.addData("Global lastTagId", AprilTagDetector.lastTagId);
             telemetry.addData("Global lastPattern", AprilTagDetector.lastPattern);
-
             telemetry.update();
         }
 
@@ -153,10 +137,7 @@ public class autoRed extends LinearOpMode {
         // -------------------- STEP 2: DETECT (SAME STYLE AS YOUR WORKING CODE) --------------------
 
 
-        // Fallback logic (same idea as before)
         if (AprilTagDetector.lastPattern == null) AprilTagDetector.lastPattern = TARGET_PATTERN;
-        //if (desired == null) desired = "PPG";
-        //desired = desired.toUpperCase();
         if (AprilTagDetector.lastPattern.length() != 3) AprilTagDetector.lastPattern = "PPG";
 
         Integer usedTagId = AprilTagDetector.lastTagId;
@@ -181,7 +162,6 @@ public class autoRed extends LinearOpMode {
                                 firstIntakingTrajectoryAction,
                                 sorter.intakeAndLoadThree(),
                                 turret.halfLeft2()
-                                //,shooter.ShooterOn()
                         ),
                         new ParallelAction(
                                 intake.IntakeHolding(),

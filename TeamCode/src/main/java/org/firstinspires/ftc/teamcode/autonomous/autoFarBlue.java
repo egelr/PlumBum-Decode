@@ -24,8 +24,8 @@ import org.firstinspires.ftc.teamcode.hardware.Turret;
 import org.firstinspires.ftc.teamcode.hardware.AprilTagDetector;
 
 @Config
-@Autonomous(name = "FAR RED", group = "Autonomous")
-public class autoFarRed extends LinearOpMode {
+@Autonomous(name = "FAR BLUE", group = "Autonomous")
+public class autoFarBlue extends LinearOpMode {
 
     // Fallback desired output pattern if no tag is mapped
     public static String TARGET_PATTERN = "PPG";
@@ -50,37 +50,26 @@ public class autoFarRed extends LinearOpMode {
         Turret turret = new Turret(hardwareMap);
         Intake intake = new Intake(hardwareMap);
 
-        // -------------------- LIMELIGHT (WORKING-STYLE DETECTOR) --------------------
         Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
         AprilTagDetector detector = new AprilTagDetector(limelight, telemetry);
-        //detector.init(); // same as your old working setup: pollRate, pipelineSwitch, start
 
-        // -------------------- TRAJECTORY (SIMPLE TEST) --------------------
         TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                // Blue: strafeToLinearHeading(new Vector2d(-50, -18), +90°)
-                // Red:  strafeToLinearHeading(new Vector2d(-50,  18), -90°)
-                .strafeToLinearHeading(new Vector2d(0, -30), Math.toRadians(0));
+
+                .strafeToLinearHeading(new Vector2d(0, 30), Math.toRadians(0));
 
 
 
         Action cameraDetectionTrajectoryAction = cameraDetectionTrajectory.build();
 
 
-        // Preset transfer
+        // Presets
         Actions.runBlocking(transfer.preset());
         Actions.runBlocking(turret.preset());
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
-            //Integer previewId = detector.getTagIdFromLimelightOnce();
-            //String previewPattern = AprilTagDetector.mapTagIdToPattern(previewId);
-
-            //telemetry.addData("Preview Tag ID", previewId);
-            //telemetry.addData("Preview Pattern (mapped)", previewPattern);
             telemetry.addData("Fallback Pattern", TARGET_PATTERN);
-
-            // Also show globals (should be null in init unless you call detect)
             telemetry.addData("Global lastTagId", AprilTagDetector.lastTagId);
             telemetry.addData("Global lastPattern", AprilTagDetector.lastPattern);
 
@@ -99,13 +88,8 @@ public class autoFarRed extends LinearOpMode {
                 )
         );
 
-        // -------------------- STEP 2: DETECT (SAME STYLE AS YOUR WORKING CODE) --------------------
-
-
         // Fallback logic (same idea as before)
         if (AprilTagDetector.lastPattern == null) AprilTagDetector.lastPattern = TARGET_PATTERN;
-        //if (desired == null) desired = "PPG";
-        //desired = desired.toUpperCase();
         if (AprilTagDetector.lastPattern.length() != 3) AprilTagDetector.lastPattern = "PPG";
 
         Integer usedTagId = AprilTagDetector.lastTagId;
@@ -122,7 +106,7 @@ public class autoFarRed extends LinearOpMode {
         // -------------------- STEP 3: SHOOT ONCE (TEST) --------------------
         Actions.runBlocking(
                 new SequentialAction(
-                        turret.farRight(),
+                        turret.farLeft(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
                         cameraDetectionTrajectoryAction
