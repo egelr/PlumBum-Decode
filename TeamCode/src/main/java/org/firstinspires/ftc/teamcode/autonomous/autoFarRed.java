@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -25,8 +24,8 @@ import org.firstinspires.ftc.teamcode.hardware.Turret;
 import org.firstinspires.ftc.teamcode.hardware.AprilTagDetector;
 
 @Config
-@Autonomous(name = "autotest", group = "Autonomous")
-public class autotest extends LinearOpMode {
+@Autonomous(name = "autoFarRed", group = "Autonomous")
+public class autoFarRed extends LinearOpMode {
 
     // Fallback desired output pattern if no tag is mapped
     public static String TARGET_PATTERN = "PPG";
@@ -61,57 +60,16 @@ public class autotest extends LinearOpMode {
                 .setReversed(true)
                 // Blue: strafeToLinearHeading(new Vector2d(-50, -18), +90°)
                 // Red:  strafeToLinearHeading(new Vector2d(-50,  18), -90°)
-                .strafeToLinearHeading(new Vector2d(-48, 18), Math.toRadians(-90));
+                .strafeToLinearHeading(new Vector2d(0, -30), Math.toRadians(0));
 
-        TrajectoryActionBuilder firstIntakingTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
-                .setReversed(false)
-                // Blue: -6, 1, 9  -> Red: 6, -1, -9
-                .lineToY(6)
-                .waitSeconds(0.1)
-                .lineToY(-1)
-                .waitSeconds(0.1)
-                .lineToY(-10);
 
-        TrajectoryActionBuilder secondShootingTrajectory = firstIntakingTrajectory.endTrajectory().fresh()
-                .setReversed(true)
-                // Blue: -17 -> Red: 17
-                .lineToY(17);
-
-        TrajectoryActionBuilder secondIntakingTrajectory = secondShootingTrajectory.endTrajectory().fresh()
-                .setReversed(false)
-                // Blue: (-77, -14, 92°) -> Red: (-77, 14, -92°)
-                .strafeToLinearHeading(new Vector2d(-77, 14), Math.toRadians(-92));
-
-        TrajectoryActionBuilder secondIntakingTrajectory2 = secondIntakingTrajectory.endTrajectory().fresh()
-                .setReversed(false)
-                // Blue: -8, -3, 8 -> Red: 8, 3, -8
-                .lineToY(8)
-                .waitSeconds(0.1)
-                .lineToY(3)
-                .waitSeconds(0.1)
-                .lineToY(-8);
-
-        TrajectoryActionBuilder thirdShootingTrajectory = secondIntakingTrajectory2.endTrajectory().fresh()
-                .setReversed(true)
-                // Blue: (-50, -17) -> Red: (-50, 17)
-                .strafeTo(new Vector2d(-50, 17));
-
-        TrajectoryActionBuilder parkingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
-                .setReversed(true)
-                // y=0 stays the same
-                .strafeTo(new Vector2d(-50, 0));
 
         Action cameraDetectionTrajectoryAction = cameraDetectionTrajectory.build();
-        Action firstIntakingTrajectoryAction = firstIntakingTrajectory.build();
-        Action secondShootingTrajectoryAction = secondShootingTrajectory.build();
-        Action secondIntakingTrajectoryAction = secondIntakingTrajectory.build();
-        Action secondIntakingTrajectory2Action = secondIntakingTrajectory2.build();
-        Action thirdShootingTrajectoryAction = thirdShootingTrajectory.build();
-        Action parkingTrajectoryAction = parkingTrajectory.build();
+
 
         // Preset transfer
         Actions.runBlocking(transfer.preset());
-        Actions.runBlocking(turret.left());
+        Actions.runBlocking(turret.preset());
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
@@ -135,10 +93,9 @@ public class autotest extends LinearOpMode {
         // -------------------- STEP 1: MOVE + TURRET --------------------
         Actions.runBlocking(
                 new ParallelAction(
-                        shooter.ShooterOn(),
+                        shooter.ShooterOnFar(),
                         sorter.loadedBalls(),
-                        cameraDetectionTrajectoryAction,
-                                detector.detectWithTimeout(2)
+                        detector.detectWithTimeout(2)
                 )
         );
 
@@ -165,22 +122,10 @@ public class autotest extends LinearOpMode {
         // -------------------- STEP 3: SHOOT ONCE (TEST) --------------------
         Actions.runBlocking(
                 new SequentialAction(
-                        turret.halfLeft(),
+                        turret.farRight(),
                         intake.IntakeHolding(),
-                        patternShooter.shootPatternMid(AprilTagDetector.lastPattern, "PGP"),
-                        sorter.preset(),
-                        new ParallelAction(
-                                firstIntakingTrajectoryAction,
-                                sorter.intakeAndLoadThree()
-                                //,shooter.ShooterOn()
-                        ),
-                        new ParallelAction(
-                                intake.IntakeBack(),
-                                sorter.preset(),
-                                secondShootingTrajectoryAction
-                        ),
-                        intake.IntakeOff(),
-                        patternShooter.shootPatternMid(AprilTagDetector.lastPattern, "PPG")
+                        patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
+                        cameraDetectionTrajectoryAction
                 )
         );
 

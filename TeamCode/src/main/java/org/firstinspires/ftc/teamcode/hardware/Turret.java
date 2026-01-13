@@ -28,16 +28,38 @@ public class Turret {
     public Action right() {
         return new Turret.right();
     }
-    public class halfLeft implements Action {
+    public class farRight implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo.setPosition(0.9);
+            turretServo.setPosition(0.335);
             return false;
         }
     }
 
-    public Action halfLeft() {
-        return new Turret.halfLeft();
+    public Action farRight() {
+        return new Turret.farRight();
+    }
+    public class halfLeft1 implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0.85);
+            return false;
+        }
+    }
+
+    public Action halfLeft1() {
+        return new Turret.halfLeft1();
+    }
+    public class halfLeft2 implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0.83);
+            return false;
+        }
+    }
+
+    public Action halfLeft2() {
+        return new Turret.halfLeft2();
     }
     public class left implements Action {
         @Override

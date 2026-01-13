@@ -182,14 +182,10 @@ public class Shooter {
     }
 
     /** Near shot (uses Variables.shooterSpeedNear, Variables.shooterAngleMid unless you have a Near angle). */
-    public Action ShooterOnNear() {
-        // If you have a different angle for near, swap Variables.shooterAngleMid for Variables.shooterAngleNear
-        return new ShooterSpinToSpeed(Variables.shooterSpeedNear, Variables.shooterAngleMid);
-    }
 
     /** Mid shot (your old ShooterOn). */
     public Action ShooterOn() {
-        return new ShooterSpinToSpeed(Variables.shooterSpeedMid, Variables.shooterAngleMid);
+        return new ShooterSpinToSpeed(Variables.shooterSpeedAuto, Variables.shooterAngleAuto);
     }
 
     /** Far shot. */

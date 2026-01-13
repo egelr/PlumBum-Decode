@@ -44,6 +44,27 @@ public class PatternShooter {
                 transfer.preset()                    // kicker DOWN voltage target
         );
     }
+    public Action shootPatternFar(String targetPattern, String loaded) {
+        int[] order = computeOrder(targetPattern, loaded);
+
+        return new SequentialAction(
+                //shooter.ShooterOn(),
+                shootOneFar(order[0]),
+                shootOneFar(order[1]),
+                shootOneFar(order[2])
+                // shooter.ShooterOff()
+        );
+    }
+
+    private Action shootOneFar(int slot) {
+        return new SequentialAction(
+                new ParallelAction(
+                        shooter.ShooterOnFar(),
+                        sorter.moveOuttakeSlotAndWait(slot)),// OUTTAKE voltage targets
+                transfer.launch(),                   // kicker UP voltage target
+                transfer.preset()                    // kicker DOWN voltage target
+        );
+    }
 
     private int[] computeOrder(String targetPattern, String loadedPattern) {
 

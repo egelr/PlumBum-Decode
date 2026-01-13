@@ -91,7 +91,7 @@ public class Sorter {
         sorterAnalog = hardwareMap.get(AnalogInput.class, "sorterAnalog");
 
         // Start at INTAKE slot 1 (index 0)
-        moveSorterToIntakeSlot(0);
+        //moveSorterToIntakeSlot(0);
 
         ballTimer.reset();
         sorterDelayTimer.reset();
