@@ -190,7 +190,7 @@ public class Shooter {
 
     /** Far shot. */
     public Action ShooterOnFar() {
-        return new ShooterSpinToSpeed(Variables.shooterSpeedFar, Variables.shooterAngleFar);
+        return new ShooterSpinToSpeed(Variables.shooterSpeedFarAuto, Variables.shooterAngleFar);
     }
 
     public class ShooterOff implements Action {

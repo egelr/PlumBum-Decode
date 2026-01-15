@@ -56,7 +56,7 @@ public class autoBlue extends LinearOpMode {
 
         TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(true)
-                .strafeToLinearHeading(new Vector2d(-52, -18), Math.toRadians(90));
+                .strafeToLinearHeading(new Vector2d(-50, -18), Math.toRadians(90));
 
         TrajectoryActionBuilder firstIntakingTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
                 .setReversed(false)
@@ -72,7 +72,7 @@ public class autoBlue extends LinearOpMode {
 
         TrajectoryActionBuilder secondIntakingTrajectory = secondShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(-77, -14), Math.toRadians(93.5));
+                .strafeToLinearHeading(new Vector2d(-75, -14), Math.toRadians(93.5));
 
         TrajectoryActionBuilder secondIntakingTrajectory2 = secondIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
@@ -84,11 +84,11 @@ public class autoBlue extends LinearOpMode {
 
         TrajectoryActionBuilder thirdShootingTrajectory = secondIntakingTrajectory2.endTrajectory().fresh()
                 .setReversed(true)
-                .strafeTo(new Vector2d(-48, -20));
+                .strafeTo(new Vector2d(-46, -20));
 
         TrajectoryActionBuilder thirdIntakingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(-102, -14), Math.toRadians(95));
+                .strafeToLinearHeading(new Vector2d(-98, -14), Math.toRadians(95));
 
         TrajectoryActionBuilder thirdIntakingTrajectory2 = thirdIntakingTrajectory.endTrajectory().fresh()
                 .setReversed(false)
@@ -109,7 +109,7 @@ public class autoBlue extends LinearOpMode {
 
         // Presets
         Actions.runBlocking(transfer.preset());
-        Actions.runBlocking(turret.right());
+        Actions.runBlocking(turret.left());
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
@@ -176,7 +176,7 @@ public class autoBlue extends LinearOpMode {
                                 secondIntakingTrajectory2Action,
                                 sorter.intakeAndLoadThree(),
                                 shooter.ShooterOn(),
-                                turret.halfRight1()
+                                turret.halfRight3()
                         ),
                         new ParallelAction(
                                 intake.IntakeHolding(),

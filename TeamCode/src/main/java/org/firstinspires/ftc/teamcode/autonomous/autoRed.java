@@ -111,7 +111,7 @@ public class autoRed extends LinearOpMode {
 
         // Preset transfer
         Actions.runBlocking(transfer.preset());
-        Actions.runBlocking(turret.left());
+        Actions.runBlocking(turret.right());
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
@@ -177,7 +177,7 @@ public class autoRed extends LinearOpMode {
                                 secondIntakingTrajectory2Action,
                                 sorter.intakeAndLoadThree(),
                                 shooter.ShooterOn(),
-                                turret.halfLeft1()
+                                turret.halfLeft3()
                         ),
                         new ParallelAction(
                                 intake.IntakeHolding(),

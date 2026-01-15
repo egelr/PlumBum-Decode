@@ -53,7 +53,7 @@ public class Turret {
     public class halfLeft1 implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo.setPosition(0.85);
+            turretServo.setPosition(0.86);
             return false;
         }
     }
@@ -61,16 +61,38 @@ public class Turret {
     public Action halfLeft1() {
         return new Turret.halfLeft1();
     }
+    public class halfLeft3 implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0.87);
+            return false;
+        }
+    }
+
+    public Action halfLeft3() {
+        return new Turret.halfLeft3();
+    }
     public class halfRight1 implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo.setPosition(0.15);
+            turretServo.setPosition(0.13);
             return false;
         }
     }
 
     public Action halfRight1() {
         return new Turret.halfRight1();
+    }
+    public class halfRight3 implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo.setPosition(0.14);
+            return false;
+        }
+    }
+
+    public Action halfRight3() {
+        return new Turret.halfRight3();
     }
     public class halfLeft2 implements Action {
         @Override
@@ -86,7 +108,7 @@ public class Turret {
     public class halfRight2 implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo.setPosition(0.17);
+            turretServo.setPosition(0.16);
             return false;
         }
     }
@@ -103,7 +125,7 @@ public class Turret {
     }
 
     public Action left() {
-        return new Turret.right();
+        return new Turret.left();
     }
     public class preset implements Action {
         @Override
