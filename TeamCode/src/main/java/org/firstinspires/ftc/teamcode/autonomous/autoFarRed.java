@@ -95,7 +95,7 @@ public class autoFarRed extends LinearOpMode {
                 new ParallelAction(
                         shooter.ShooterOnFar(),
                         sorter.loadedBalls(),
-                        detector.detectWithTimeout(2)
+                        detector.detectWithTimeout(4)
                 )
         );
 

@@ -82,6 +82,7 @@ public class NewTeleOp extends LinearOpMode {
     private int ball1 = -1, ball2 = -1, ball3 = -1;
     private int sorterState = 0;
     private int sorterPositionIndex = 1;
+    private boolean far = false;
 
     private boolean lastBallPresent = false;
     private boolean intakeEnabled = false;
@@ -250,11 +251,13 @@ public class NewTeleOp extends LinearOpMode {
                 targetVelocity = MAX_TICKS_PER_SEC * Variables.shooterSpeedMid;
                 shooterAnglePos = Variables.shooterAngleMid;
                 shooterAngleServo.setPosition(shooterAnglePos);
+                far = false;
             }
             if (gamepad1.circle) {
                 targetVelocity = MAX_TICKS_PER_SEC * Variables.shooterSpeedFar;
                 shooterAnglePos = Variables.shooterAngleFar;
                 shooterAngleServo.setPosition(shooterAnglePos);
+                far = true;
             }
 
             if (gamepad1.dpad_up) targetVelocity += 2;
@@ -437,8 +440,10 @@ public class NewTeleOp extends LinearOpMode {
         // Convert txDeg into a turret correction (EXACT)
         double turretDeg = (-txDeg) * DIR;
         int tagid = tag.getFiducialId();
-        if (tagid == 20) turretDeg += 4;
-        if (tagid == 24) turretDeg -= 4;
+        if (tagid == 20 && far == false) turretDeg += 4;
+        if (tagid == 24 && far == false) turretDeg -= 4;
+        if (tagid == 20 && far == true) turretDeg += 2;
+        if (tagid == 24 && far == true) turretDeg -= 2;
 
         // turretDeg -> servoDeg using gear ratio (EXACT)
         double servoDeg = turretDeg / GEAR_RATIO / 360.0;

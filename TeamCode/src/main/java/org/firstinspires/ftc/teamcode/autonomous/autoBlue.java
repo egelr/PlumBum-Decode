@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -130,7 +131,10 @@ public class autoBlue extends LinearOpMode {
                         shooter.ShooterOn(),
                         sorter.loadedBalls(),
                         cameraDetectionTrajectoryAction,
-                        detector.detectWithTimeout(2)
+                        new SequentialAction(
+                                new SleepAction(1),
+                        detector.detectWithTimeout(3)
+                        )
                 )
         );
 
