@@ -12,11 +12,12 @@ import java.util.List;
 @TeleOp(name = "Turret Aim At AprilTag (Simple)", group = "Vision")
 public class TurretControlTest extends LinearOpMode {
 
-    private Servo turretServo;
+    private Servo turretServo1;
+    private Servo turretServo2;
     private Limelight3A limelight;
 
     // turretDeg = servoDeg * (35/84)  => servoDeg = turretDeg / (35/84)
-    private static final double GEAR_RATIO = 35.0 / 84.0;
+    private static final double GEAR_RATIO = 2/ (35.0 / 84.0);
 
     // Flip if turret moves opposite direction
     private static final double DIR = +1.0;
@@ -26,7 +27,8 @@ public class TurretControlTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        turretServo = hardwareMap.get(Servo.class, "turretServo");
+        turretServo1 = hardwareMap.get(Servo.class, "turretServo1");
+        turretServo2 = hardwareMap.get(Servo.class, "turretServo2");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
         limelight.pipelineSwitch(0); // you said you use pipeline 0
@@ -41,9 +43,9 @@ public class TurretControlTest extends LinearOpMode {
         while (opModeIsActive()) {
 
             // manual test (optional)
-            if (gamepad1.square) turretServo.setPosition(0.5);
-            if (gamepad1.circle) turretServo.setPosition(0.2);
-            if (gamepad1.triangle) turretServo.setPosition(0.0);
+            if (gamepad1.square) {turretServo1.setPosition(0.5); turretServo2.setPosition(0.5);}
+            if (gamepad1.circle) {turretServo1.setPosition(0.2); turretServo2.setPosition(0.2);}
+            if (gamepad1.triangle) {turretServo1.setPosition(0.0); turretServo2.setPosition(0.0);}
 
             if (gamepad1.cross) {
                 aimAtTagSnap();
@@ -95,16 +97,18 @@ public class TurretControlTest extends LinearOpMode {
         // so turret should rotate right to reduce tx -> 0, hence the minus sign.
         double turretDeg = (-txDeg) * DIR;
         int tagid = tag.getFiducialId();
-        if (tagid == 20) turretDeg -=4;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
-        if (tagid == 24) turretDeg +=4;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
+        if (tagid == 20) turretDeg +=4;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
+        if (tagid == 24) turretDeg -=4;   // if it goes the wrong way, change to: double desiredAngleDeg = tx;
 
         // turretDeg -> servoDeg using gear ratio
         double servoDeg = turretDeg / GEAR_RATIO/360;
 
         // 360° servo: degrees -> position 0..1
-        double servoPos = turretServo.getPosition() +servoDeg;
+        double servoPos = turretServo1.getPosition() +servoDeg;
 
-        turretServo.setPosition(servoPos);
+        turretServo1.setPosition(servoPos);
+        turretServo2.setPosition(servoPos);
+
 
         telemetry.addData("TagID", tag.getFiducialId());
         telemetry.addData("txDeg", "%.4f", txDeg);

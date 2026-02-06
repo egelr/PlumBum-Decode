@@ -114,13 +114,13 @@ public class NewTeleOp extends LinearOpMode {
     private int shootAllStep = 0;
 
     // ----------------------------- TURRET + LIMELIGHT (EXACT LIKE YOUR EXAMPLE) -----------------------------
-    private Servo turretServo;
+    private Servo turretServo1, turretServo2;
     private Limelight3A limelight;
 
     // turretDeg = servoDeg * (35/84)  => servoDeg = turretDeg / (35/84)
-    private static final double GEAR_RATIO = 35.0 / 84.0;
+    private static final double GEAR_RATIO =  (35.0 / 84.0) * 2;
 
-    private static final double DIR = +1.0;
+    private static final double DIR = -1.0; //reversed
 
     private static final int TARGET_TAG_ID = -1; // -1 = first seen
 
@@ -186,7 +186,9 @@ public class NewTeleOp extends LinearOpMode {
         shooterStableTimer.reset();
 
         // ----------------------------- TURRET -----------------------------
-        turretServo = hardwareMap.get(Servo.class, "turretServo");
+        turretServo1 = hardwareMap.get(Servo.class, "turretServo1");
+        turretServo2 = hardwareMap.get(Servo.class, "turretServo2");
+
 
         // ----------------------------- LIMELIGHT -----------------------------
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -267,7 +269,8 @@ public class NewTeleOp extends LinearOpMode {
                 targetVelocity = 0;
                 shooterAnglePos = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
-                turretServo.setPosition(0.5);
+                turretServo1.setPosition(0.5);
+                turretServo2.setPosition(0.5);
                 kickerTopServo.setPosition(0.99);
                 kickerBottomServo.setPosition(0.99);
             }
@@ -440,18 +443,19 @@ public class NewTeleOp extends LinearOpMode {
         // Convert txDeg into a turret correction (EXACT)
         double turretDeg = (-txDeg) * DIR;
         int tagid = tag.getFiducialId();
-        if (tagid == 20 && far == false) turretDeg += 4;
-        if (tagid == 24 && far == false) turretDeg -= 4;
-        if (tagid == 20 && far == true) turretDeg += 2;
-        if (tagid == 24 && far == true) turretDeg -= 2;
+        if (tagid == 20 && far == false) turretDeg -= 4;
+        if (tagid == 24 && far == false) turretDeg += 4;
+        if (tagid == 20 && far == true) turretDeg -= 2;
+        if (tagid == 24 && far == true) turretDeg += 2;
 
         // turretDeg -> servoDeg using gear ratio (EXACT)
         double servoDeg = turretDeg / GEAR_RATIO / 360.0;
 
         // 360° servo: degrees -> position 0..1 (EXACT)
-        double servoPos = turretServo.getPosition() + servoDeg;
+        double servoPos = turretServo1.getPosition() + servoDeg;
 
-        turretServo.setPosition(servoPos);
+        turretServo1.setPosition(servoPos);
+        turretServo2.setPosition(servoPos);
     }
 
     // ----------------------------- KICKER: STABLE-IN-TOLERANCE CHECK -----------------------------
@@ -654,7 +658,8 @@ public class NewTeleOp extends LinearOpMode {
                     shootAllRunning = false;
                     intakeMotor.set(1.0);
                     intakeEnabled = true;
-                    turretServo.setPosition(0.5);
+                    turretServo1.setPosition(0.5);
+                    turretServo2.setPosition(0.5);
                     targetVelocity = 0;
 
                 }
