@@ -220,6 +220,15 @@ public class NewTeleOp extends LinearOpMode {
                 if (gamepad1.left_bumper) { intakeMotor.set(-1); intakeEnabled = false; }
             }
 
+            if (gamepad1.right_bumper && gamepad1.left_trigger < 0.5){
+                turretServo1.setPosition(0.93);
+                turretServo2.setPosition(0.93);
+            }
+            if (gamepad1.right_bumper && gamepad1.left_trigger > 0.5){
+                turretServo1.setPosition(0.07);
+                turretServo2.setPosition(0.07);
+            }
+
             // ----------------------------- MANUAL KICKER RESET -----------------------------
             if (gamepad1.dpad_left && gamepad1.left_trigger < 0.5) {
                 kickerTopServo.setPosition(0.99);
@@ -658,8 +667,8 @@ public class NewTeleOp extends LinearOpMode {
                     shootAllRunning = false;
                     intakeMotor.set(1.0);
                     intakeEnabled = true;
-                    turretServo1.setPosition(0.5);
-                    turretServo2.setPosition(0.5);
+                    //turretServo1.setPosition(0.5);
+                    //turretServo2.setPosition(0.5);
                     targetVelocity = 0;
 
                 }

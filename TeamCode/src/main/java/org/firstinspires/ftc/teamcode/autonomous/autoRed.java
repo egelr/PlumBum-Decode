@@ -132,7 +132,7 @@ public class autoRed extends LinearOpMode {
                         sorter.loadedBalls(),
                         cameraDetectionTrajectoryAction,
                         new SequentialAction(
-                                new SleepAction(1),
+                                new SleepAction(0.5),
                                 detector.detectWithTimeout(3)
                         )
                 )

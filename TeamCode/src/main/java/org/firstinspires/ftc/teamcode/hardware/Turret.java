@@ -22,8 +22,8 @@ public class Turret {
     public class left implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo1.setPosition(0.75); //1
-            turretServo2.setPosition(0.75);
+            turretServo1.setPosition(0.88); //1
+            turretServo2.setPosition(0.88);
             return false;
         }
     }
@@ -131,8 +131,8 @@ public class Turret {
     public class right implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo1.setPosition(0.25); //0
-            turretServo2.setPosition(0.25); //0
+            turretServo1.setPosition(0.12); //0
+            turretServo2.setPosition(0.12); //0
             return false;
         }
     }

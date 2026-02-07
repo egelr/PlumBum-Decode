@@ -10,7 +10,7 @@ public class Variables {
     public static final double transferUpPosition = 0.22;
     public static final double shooterSpeedAuto = 0.56;
     public static final double shooterSpeedMid = 0.56; //0.64 -> 0.56
-    public static final double shooterSpeedFar = 0.68; //0.8
+    public static final double shooterSpeedFar = 0.71; //0.8
 
     public static final double shooterSpeedFarAuto = 0.68;
     public static double shooter_kP = 0.00025;  // start here

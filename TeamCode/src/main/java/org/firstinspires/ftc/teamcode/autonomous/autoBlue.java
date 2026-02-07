@@ -131,10 +131,11 @@ public class autoBlue extends LinearOpMode {
                         shooter.ShooterOn(),
                         sorter.loadedBalls(),
                         cameraDetectionTrajectoryAction,
+                        //turret.left(),
                         new SequentialAction(
-                                new SleepAction(1),
+                                new SleepAction(0.5),
                         detector.detectWithTimeout(3)
-                        )
+                                )
                 )
         );
 

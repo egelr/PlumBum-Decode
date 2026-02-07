@@ -2,92 +2,152 @@ package org.firstinspires.ftc.teamcode.teleOpModes;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Servo;
+
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Variables;
 
+import java.util.List;
+
 @TeleOp(name = "TwoDriverTeleOp")
 public class TwoDriverTeleOp extends LinearOpMode {
 
-    // Drivetrain
+    // ----------------------------- DRIVETRAIN -----------------------------
     private Motor fL, fR, bL, bR;
     private Motor intakeMotor;
     public double drive_speed = 1;
 
-    // Shooter
+    // ----------------------------- SHOOTER -----------------------------
     private DcMotorEx shooterLeft, shooterRight;
     private Servo shooterAngleServo;
     private double shooterAnglePos = 0.0;
 
-    // Shooter specs
     private static final int CPR = 28;
     private static final int MAX_RPM = 6000;
-    private static final int MAX_TICKS_PER_SEC = (MAX_RPM / 60) * CPR;  // ~2800
+    private static final int MAX_TICKS_PER_SEC = (MAX_RPM / 60) * CPR;
     private double targetVelocity = 0;
 
-    // Shooter stability detection
     private final double SHOOTER_TOLERANCE_TICKS = 150.0;
     private final long SHOOTER_STABLE_TIME_MS = 300;
     private final ElapsedTime shooterStableTimer = new ElapsedTime();
     private boolean shooterSpeedInRange = false;
     private boolean shooterReady = false;
 
-    // Sorter + transfer
-    private Servo sorterLeftServo;
-    private Servo sorterRightServo;
-    private Servo transferOutputServo;
+    // ----------------------------- SORTER + KICKER -----------------------------
+    private Servo sorterLeftServo, sorterRightServo;
+    private Servo kickerTopServo, kickerBottomServo;
 
-    // Color + distance sensors
-    private ColorSensor sensorColorFront;
-    private DistanceSensor sensorDistanceFront;
-    private ColorSensor sensorColorBack;
-    private DistanceSensor sensorDistanceBack;
+    private AnalogInput kickerAnalog, sorterAnalog;
 
-    // Ball memory: 0 = purple, 1 = green, -1 = unknown
-    private int ball1 = -1;
-    private int ball2 = -1;
-    private int ball3 = -1;
+    private static final double KICKER_DOWN_V = 3.0025;
+    private static final double KICKER_UP_V = 2.7495;
 
-    // Filling state
-    // 0 = waiting for ball 1
-    // 1 = waiting for ball 2
-    // 2 = waiting for ball 3
-    // 3 = full
+    private static final double SORTER_INTAKE_1_V = 0.2200;
+    private static final double SORTER_INTAKE_2_V = 1.2850;
+    private static final double SORTER_INTAKE_3_V = 2.3640;
+
+    private static final double SORTER_OUTTAKE_1_V = 1.7425;
+    private static final double SORTER_OUTTAKE_2_V = 2.8405;
+    private static final double SORTER_OUTTAKE_3_V = 0.6715;
+
+    private static final double KICKER_V_TOL = 0.030;
+    private static final double SORTER_V_TOL = 0.030;
+
+    private static final long KICKER_TIMEOUT_MS = 350;
+    private static final long SORTER_TIMEOUT_MS = 450;
+
+    private static final long KICKER_STABLE_MS = 25;
+    private static final long KICKER_MIN_DOWN_MS = 70;
+
+    private static final double OUTTAKE_INTAKE_POWER = 0.4;
+    private boolean intakeWasEnabledBeforeShootAll = false;
+
+    // ----------------------------- SENSORS -----------------------------
+    private ColorSensor sensorColorFront, sensorColorBack;
+    private DistanceSensor sensorDistanceFront, sensorDistanceBack;
+
+    private int ball1 = -1, ball2 = -1, ball3 = -1;
     private int sorterState = 0;
+    private int sorterPositionIndex = 1;
+    private boolean far = false;
 
-    // Ball presence detection
     private boolean lastBallPresent = false;
-
-    // Intake state
     private boolean intakeEnabled = false;
-
-    // D-pad right shoot-all edge detection
     private boolean lastShootAllPressed = false;
 
-    // Pattern buttons edge detection (gamepad2)
-    private boolean lastGPPPressed = false;  // square
-    private boolean lastPGPPressed = false;  // triangle
-    private boolean lastPPGPressed = false;  // circle
-
-    // Detection constants
-    private final double BALL_DETECT_DISTANCE = 4.0;   // cm
-    private final long BALL_COOLDOWN_MS = 700;         // ms between balls
-
+    private final double BALL_DETECT_DISTANCE = 3.0;
+    private final long BALL_COOLDOWN_MS = 100;
     private final ElapsedTime ballTimer = new ElapsedTime();
+
+    private final ElapsedTime sorterDelayTimer = new ElapsedTime();
+    private boolean pendingBallSequence = false;
+    private int pendingSorterState = -1;
+    private int pendingColor = -1;
+
+    private boolean sorterMoveActive = false;
+    private double sorterTargetV = 0.0;
+    private final ElapsedTime sorterMoveTimer = new ElapsedTime();
+    private String sorterMoveError = "";
+
+    // ----------------------------- KICKER STATE MACHINE -----------------------------
+    private enum KickerPulseState {IDLE, COMMAND_DOWN, WAIT_DOWN, COMMAND_UP, WAIT_UP}
+
+    private KickerPulseState kickerPulseState = KickerPulseState.IDLE;
+
+    private final ElapsedTime kickerPulseTimer = new ElapsedTime();
+    private final ElapsedTime kickerStableTimer = new ElapsedTime();
+    private boolean kickerStableRunning = false;
+
+    private boolean shootAllRunning = false;
+    private int shootAllStep = 0;
+
+    // ----------------------------- TURRET + LIMELIGHT (EXACT LIKE YOUR EXAMPLE) -----------------------------
+    private Servo turretServo1, turretServo2;
+    private Limelight3A limelight;
+
+    // turretDeg = servoDeg * (35/84)  => servoDeg = turretDeg / (35/84)
+    private static final double GEAR_RATIO = (35.0 / 84.0) * 2;
+
+    private static final double DIR = -1.0; //reversed
+
+    private static final int TARGET_TAG_ID = -1; // -1 = first seen
+
+    // Vision telemetry
+    private boolean tagVisible = false;
+    private int currentTagId = -1;
+    private double lastTx = 0.0;
+    private double lastArea = 0.0;
+    // ----------------------------- PATTERN SHOOT (GAMEPAD2) -----------------------------
+    private boolean lastPPGPressed = false;
+    private boolean lastPGPPressed = false;
+    private boolean lastGPPPressed = false;
+
+    // 0 = Purple, 1 = Green (matches your detectColourFromTwoSensors)
+    private final int PURPLE = 0;
+    private final int GREEN = 1;
+
+    // Order of sorter indices (1..3) to shoot in
+    private final int[] shootOrder = new int[]{1, 2, 3};
+    private int shootOrderPtr = 0;
+    private int shootOrderCount = 3;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // -----------------------------
-        // 1. DRIVETRAIN SETUP
-        // -----------------------------
+        // ----------------------------- DRIVETRAIN -----------------------------
         fL = new Motor(hardwareMap, "leftFront", Motor.GoBILDA.RPM_435);
         fR = new Motor(hardwareMap, "rightFront", Motor.GoBILDA.RPM_435);
         bL = new Motor(hardwareMap, "leftBack", Motor.GoBILDA.RPM_435);
@@ -100,31 +160,30 @@ public class TwoDriverTeleOp extends LinearOpMode {
 
         MecanumDrive drive = new MecanumDrive(fL, fR, bL, bR);
 
-        // -----------------------------
-        // 2. INTAKE + SHOOTER SETUP
-        // -----------------------------
+        // ----------------------------- INTAKE + SHOOTER -----------------------------
         intakeMotor = new Motor(hardwareMap, "intakeMotor", Motor.GoBILDA.RPM_435);
 
-        shooterLeft  = hardwareMap.get(DcMotorEx.class, "shooterLeft");
+        shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
         shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
 
-        shooterLeft.setDirection(DcMotorEx.Direction.REVERSE);
-        shooterLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        shooterLeft.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        shooterRight.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        shooterLeft.setDirection(DcMotor.Direction.REVERSE);
+        shooterLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterLeft.setVelocityPIDFCoefficients(50, 0, 0.001, 11.7);
 
-        shooterLeft.setVelocityPIDFCoefficients(50, 0.0, 0.001, 11.7);
+        shooterRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         shooterAngleServo = hardwareMap.get(Servo.class, "shooterAngleServo");
-        shooterAnglePos = 0.0;
-        shooterAngleServo.setPosition(shooterAnglePos);
 
-        // -----------------------------
-        // 3. SERVOS + SENSORS SETUP
-        // -----------------------------
-        transferOutputServo = hardwareMap.get(Servo.class, "transferOutputServo");
+        // ----------------------------- SORTER + KICKER -----------------------------
+        kickerTopServo = hardwareMap.get(Servo.class, "kickerTopServo");
+        kickerBottomServo = hardwareMap.get(Servo.class, "kickerBottomServo");
+
         sorterLeftServo = hardwareMap.get(Servo.class, "sorterLeftServo");
         sorterRightServo = hardwareMap.get(Servo.class, "sorterRightServo");
+
+        kickerAnalog = hardwareMap.get(AnalogInput.class, "kickerAnalog");
+        sorterAnalog = hardwareMap.get(AnalogInput.class, "sorterAnalog");
 
         sensorColorFront = hardwareMap.get(ColorSensor.class, "colourSensorFront");
         sensorDistanceFront = hardwareMap.get(DistanceSensor.class, "colourSensorFront");
@@ -132,171 +191,144 @@ public class TwoDriverTeleOp extends LinearOpMode {
         sensorColorBack = hardwareMap.get(ColorSensor.class, "colourSensorBack");
         sensorDistanceBack = hardwareMap.get(DistanceSensor.class, "colourSensorBack");
 
-        sorterLeftServo.setPosition(Variables.sorter1Position);
-        sorterRightServo.setPosition(Variables.sorter1Position + Variables.sorterOffset);
+        /*requestSorterMoveToIndexIntake(1);
 
-        transferOutputServo.setPosition(Variables.transferDownPosition);
+        kickerTopServo.setPosition(0.99);
+        kickerBottomServo.setPosition(0.99);*/
 
         ballTimer.reset();
         shooterStableTimer.reset();
 
-        telemetry.addLine("Ready. Press PLAY to start.");
+        // ----------------------------- TURRET -----------------------------
+        turretServo1 = hardwareMap.get(Servo.class, "turretServo1");
+        turretServo2 = hardwareMap.get(Servo.class, "turretServo2");
+
+
+        // ----------------------------- LIMELIGHT -----------------------------
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        telemetry.setMsTransmissionInterval(11);
+        limelight.setPollRateHz(100);
+        limelight.pipelineSwitch(0);
+        limelight.start();
+
+        telemetry.addLine("Ready!");
         telemetry.update();
 
         waitForStart();
 
         while (opModeIsActive()) {
 
-            // -----------------------------
-            // 1. DRIVETRAIN
-            // -----------------------------
+            // ----------------------------- DRIVETRAIN -----------------------------
             drive.driveRobotCentric(
                     -gamepad1.left_stick_x * drive_speed,
                     gamepad1.left_stick_y * drive_speed,
                     -gamepad1.right_stick_x * drive_speed,
                     false
             );
+            drive_speed = (gamepad1.right_trigger > 0.5) ? 0.45 : 1.0;
 
-            if (gamepad1.right_trigger > 0.5) {
-                drive_speed = 0.45;
-            } else {
-                drive_speed = 1;
-            }
-
-            // -----------------------------
-            // 2. INTAKE CONTROL
-            // -----------------------------
-            if (gamepad1.triangle) {          // intake forward ON
-                intakeMotor.set(1);
-                intakeEnabled = true;
-            }
-            if (gamepad1.circle) {            // intake OFF
-                intakeMotor.set(0);
-                intakeEnabled = false;
-            }
-            if (gamepad1.left_bumper) {       // reverse intake
-                intakeMotor.set(-1);
-                intakeEnabled = false;
-            }
-
-            // -----------------------------
-            // 3. TRANSFER SERVO + SHOOT ALL (GAMEPAD1)
-            // -----------------------------
-            // D-pad left = manual DOWN
-            if (gamepad1.dpad_left) {
-                transferOutputServo.setPosition(Variables.transferDownPosition);
-            }
-
-            // D-pad right (on press) = shoot balls 3,2,1 IF shooter is ready
-            boolean shootAllPressed = gamepad1.dpad_right;
-            if (shootAllPressed && !lastShootAllPressed) {
-
-                if (shooterReady) {
-                    // ----- BALL 3 -----
-                    if (ball3 != -1) {
-                        moveSorterToSlot(3);
-                        //sleep(200);
-
-                        transferOutputServo.setPosition(Variables.transferUpPosition);
-                        sleep(200);
-                        transferOutputServo.setPosition(Variables.transferDownPosition);
-                        sleep(200);
-                    }
-
-                    // ----- BALL 2 -----
-                    if (ball2 != -1) {
-                        moveSorterToSlot(2);
-                        sleep(200);
-
-                        transferOutputServo.setPosition(Variables.transferUpPosition);
-                        sleep(200);
-                        transferOutputServo.setPosition(Variables.transferDownPosition);
-                        sleep(200);
-                    }
-
-                    // ----- BALL 1 -----
-                    if (ball1 != -1) {
-                        moveSorterToSlot(1);
-                        sleep(200);
-
-                        transferOutputServo.setPosition(Variables.transferUpPosition);
-                        sleep(200);
-                        transferOutputServo.setPosition(Variables.transferDownPosition);
-                        sleep(200);
-                    }
-
-                    // Reset memory + sorter + transfer
-                    ball1 = -1;
-                    ball2 = -1;
-                    ball3 = -1;
-                    sorterState = 0;
-                    moveSorterToSlot(1);
-                    transferOutputServo.setPosition(Variables.transferUpPosition);
+            // ----------------------------- INTAKE -----------------------------
+            if (!shootAllRunning) {
+                if (gamepad1.triangle) {
+                    intakeMotor.set(1);
+                    sorterLeftServo.setPosition(0);
+                    sorterRightServo.setPosition(0 + Variables.sorterOffset);
+                    intakeEnabled = true;
                 }
+                if (gamepad1.cross) {
+                    intakeMotor.set(0);
+                    intakeEnabled = false;
+                }
+                if (gamepad1.left_bumper) {
+                    intakeMotor.set(-1);
+                    intakeEnabled = false;
+                }
+            }
+
+            if (gamepad1.right_bumper && gamepad1.left_trigger < 0.5) {
+                turretServo1.setPosition(1);
+                turretServo2.setPosition(1);
+            }
+            if (gamepad1.right_bumper && gamepad1.left_trigger > 0.5) {
+                turretServo1.setPosition(0);
+                turretServo2.setPosition(0);
+            }
+
+            // ----------------------------- MANUAL KICKER RESET -----------------------------
+            if (gamepad1.dpad_left && gamepad1.left_trigger < 0.5) {
+                kickerTopServo.setPosition(0.99);
+                kickerBottomServo.setPosition(0.99);
+                kickerPulseState = KickerPulseState.IDLE;
+                kickerStableRunning = false;
+            }
+
+            // ----------------------------- SHOOT ALL -----------------------------
+            boolean shootAllPressed = gamepad1.dpad_right && gamepad1.left_trigger < 0.5;
+
+            if (shootAllPressed && !lastShootAllPressed && shooterReady && !shootAllRunning) {
+
+                // EXACT one-time detection + aim like your example
+                aimAtTagSnap_ExactlyLikeExample();
+
+                intakeWasEnabledBeforeShootAll = intakeEnabled;
+                intakeMotor.set(OUTTAKE_INTAKE_POWER);
+
+                shootAllRunning = true;
+                shootAllStep = 0;
             }
             lastShootAllPressed = shootAllPressed;
 
-            // -----------------------------
-            // 4. SHOOTER CONTROL
-            // -----------------------------
+            if (shootAllRunning) {
+                intakeMotor.set(OUTTAKE_INTAKE_POWER);
+            }
+
+            // ----------------------------- SHOOTER -----------------------------
             if (gamepad1.square) {
-                targetVelocity = MAX_TICKS_PER_SEC * 0.52;
+                targetVelocity = MAX_TICKS_PER_SEC * Variables.shooterSpeedMid;
+                shooterAnglePos = Variables.shooterAngleMid;
+                shooterAngleServo.setPosition(shooterAnglePos);
+                far = false;
+            }
+            if (gamepad1.circle) {
+                targetVelocity = MAX_TICKS_PER_SEC * Variables.shooterSpeedFar;
+                shooterAnglePos = Variables.shooterAngleFar;
+                shooterAngleServo.setPosition(shooterAnglePos);
+                far = true;
             }
 
-            if (gamepad1.dpad_up) {
-                targetVelocity += 0.5;
-            }
-            if (gamepad1.dpad_down) {
-                targetVelocity -= 0.5;
-            }
+            if (gamepad1.dpad_up) targetVelocity += 2;
+            if (gamepad1.dpad_down) targetVelocity -= 2;
 
-            // guide: stop shooter + reset angle + sorter neutral
             if (gamepad1.guide) {
                 targetVelocity = 0;
                 shooterAnglePos = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
-                moveSorterToSlot(1);
+                turretServo1.setPosition(0.5);
+                turretServo2.setPosition(0.5);
+                kickerTopServo.setPosition(0.99);
+                kickerBottomServo.setPosition(0.99);
             }
 
-            // share: angle preset
-            if (gamepad1.share) {
-                shooterAnglePos = 0.5;
-                shooterAngleServo.setPosition(shooterAnglePos);
-            }
-
-            // triangle: tilt up
-            if (gamepad1.triangle && shooterAnglePos < 0.45) {
-                shooterAnglePos += 0.05;
+            if (gamepad1.share && shooterAnglePos > 0.05) {
+                shooterAnglePos -= 0.02;
                 shooterAngleServo.setPosition(shooterAnglePos);
                 sleep(300);
             }
 
-            // cross: tilt down
-            if (gamepad1.cross && shooterAnglePos > 0.05) {
-                shooterAnglePos -= 0.05;
+            if (gamepad1.options && shooterAnglePos < 0.45) {
+                shooterAnglePos += 0.02;
                 shooterAngleServo.setPosition(shooterAnglePos);
                 sleep(300);
             }
 
-            // Clamp shooter velocity
-            targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
-
-            shooterLeft.setVelocity(targetVelocity);
-            shooterRight.setVelocity(targetVelocity);
-
-            // -----------------------------
-            // 4.1 SHOOTER STABILITY CHECK
-            // -----------------------------
             targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
             shooterLeft.setVelocity(targetVelocity);
 
-            double power = targetVelocity / MAX_TICKS_PER_SEC;  // simple feedforward
+            double power = targetVelocity / MAX_TICKS_PER_SEC;
             power = Math.max(0, Math.min(1, power));
-
             shooterRight.setPower(power);
 
-            // Shooter stability check
-            double measuredVel = shooterLeft.getVelocity();  // axle speed
+            double measuredVel = shooterLeft.getVelocity();
 
             if (targetVelocity > 0 && Math.abs(measuredVel - targetVelocity) < SHOOTER_TOLERANCE_TICKS) {
                 if (!shooterSpeedInRange) {
@@ -309,235 +341,502 @@ public class TwoDriverTeleOp extends LinearOpMode {
                 shooterReady = false;
             }
 
-            // -----------------------------
-            // 5. BALL DETECTION + SORTER
-            // -----------------------------
-            if (intakeEnabled && sorterState < 3) {
+            // ----------------------------- SORTER/KICKER UPDATES -----------------------------
+            updateSorterMove();
+            updateKickerPulse();
+
+            if (shootAllRunning) {
+                updateShootAllSequence();
+            }
+            // ----------------------------- PATTERN SHOOT (GAMEPAD2) -----------------------------
+// Pick buttons you like. Example mapping:
+            boolean ppgPressed = gamepad2.square;    // PPG
+            boolean pgpPressed = gamepad2.triangle;  // PGP
+            boolean gppPressed = gamepad2.circle;    // GPP
+
+// Start only if shooterReady and not already running
+            if (ppgPressed && !lastPPGPressed && shooterReady && !shootAllRunning) {
+                startShootPattern(PURPLE, PURPLE, GREEN);
+            }
+            if (pgpPressed && !lastPGPPressed && shooterReady && !shootAllRunning) {
+                startShootPattern(PURPLE, GREEN, PURPLE);
+            }
+            if (gppPressed && !lastGPPPressed && shooterReady && !shootAllRunning) {
+                startShootPattern(GREEN, PURPLE, PURPLE);
+            }
+
+            lastPPGPressed = ppgPressed;
+            lastPGPPressed = pgpPressed;
+            lastGPPPressed = gppPressed;
+
+
+            // ----------------------------- BALL DETECTION -----------------------------
+            if (!shootAllRunning && intakeEnabled && sorterState < 3) {
 
                 double distF = sensorDistanceFront.getDistance(DistanceUnit.CM);
                 double distB = sensorDistanceBack.getDistance(DistanceUnit.CM);
 
                 boolean ballDetected = (distF < BALL_DETECT_DISTANCE) || (distB < BALL_DETECT_DISTANCE);
                 boolean allowNewBall = ballTimer.milliseconds() > BALL_COOLDOWN_MS;
-
                 boolean newBall = ballDetected && !lastBallPresent && allowNewBall;
 
-                int detectedColour = detectColourFromTwoSensors();
+                if (newBall && !pendingBallSequence) {
+                    pendingColor = detectColourFromTwoSensors();
+                    pendingSorterState = sorterState;
+                    pendingBallSequence = true;
+                    sorterDelayTimer.reset();
+                }
 
-                switch (sorterState) {
-
-                    case 0: // first ball
-                        if (newBall) {
-                            ball1 = detectedColour;
-                            moveSorterToSlot(1);
-                            sorterState = 1;
-                            ballTimer.reset();
+                if (pendingBallSequence && sorterDelayTimer.milliseconds() > 10) {
+                    if (!sorterMoveActive) {
+                        switch (pendingSorterState) {
+                            case 0:
+                                ball1 = pendingColor;
+                                requestSorterMoveToIndexIntake(2);
+                                sorterState = 1;
+                                break;
+                            case 1:
+                                ball2 = pendingColor;
+                                requestSorterMoveToIndexIntake(3);
+                                sorterState = 2;
+                                break;
+                            case 2:
+                                ball3 = pendingColor;
+                                sorterState = 3;
+                                sorterLeftServo.setPosition(0.54);
+                                sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
+                                intakeMotor.set(0);
+                                intakeEnabled = false;
+                                break;
                         }
-                        break;
-
-                    case 1: // second ball
-                        if (newBall) {
-                            ball2 = detectedColour;
-                            moveSorterToSlot(2);
-                            sorterState = 2;
-                            ballTimer.reset();
-                        }
-                        break;
-
-                    case 2: // third ball
-                        if (newBall) {
-                            ball3 = detectedColour;
-                            moveSorterToSlot(3);
-                            sorterState = 3;
-                            ballTimer.reset();
-
-                            intakeMotor.set(0);
-                            intakeEnabled = false;
-                        }
-                        break;
+                        ballTimer.reset();
+                        pendingBallSequence = false;
+                    }
                 }
 
                 lastBallPresent = ballDetected;
-
-                telemetry.addData("Sorter State", sorterState);
-                telemetry.addData("Ball 1", colourToString(ball1));
-                telemetry.addData("Ball 2", colourToString(ball2));
-                telemetry.addData("Ball 3", colourToString(ball3));
-
-                telemetry.addData("Dist Front (cm)", "%.2f", distF);
-                telemetry.addData("Dist Back  (cm)", "%.2f", distB);
-                telemetry.addData("Cooldown (ms left)",
-                        Math.max(0, BALL_COOLDOWN_MS - (long) ballTimer.milliseconds()));
-
             } else {
                 lastBallPresent = false;
+                pendingBallSequence = false;
             }
 
-            // -----------------------------
-            // 6. PATTERN SHOOTING (GAMEPAD2)
-            // Patterns: GPP, PGP, PPG
-            // 0 = purple, 1 = green
-            // -----------------------------
-            boolean gppPressed = gamepad2.square;    // GPP: [1,0,0]
-            boolean pgpPressed = gamepad2.triangle;  // PGP: [0,1,0]
-            boolean ppgPressed = gamepad2.circle;    // PPG: [0,0,1]
-
-            if (gppPressed && !lastGPPPressed && shooterReady) {
-                shootPattern(new int[]{1, 0, 0});   // GPP
-            }
-            if (pgpPressed && !lastPGPPressed && shooterReady) {
-                shootPattern(new int[]{0, 1, 0});   // PGP
-            }
-            if (ppgPressed && !lastPPGPressed && shooterReady) {
-                shootPattern(new int[]{0, 0, 1});   // PPG
-            }
-
-            lastGPPPressed = gppPressed;
-            lastPGPPressed = pgpPressed;
-            lastPPGPressed = ppgPressed;
-
-            // -----------------------------
-            // 7. GENERAL TELEMETRY
-            // -----------------------------
-            telemetry.addData("Intake Enabled", intakeEnabled);
-            telemetry.addData("Target Velocity", targetVelocity);
-            telemetry.addData("Target RPM", (targetVelocity / CPR) * 60);
-            telemetry.addData("Shooter Ready", shooterReady);
-            telemetry.addData("Shooter Angle Pos", shooterAnglePos);
-
+            // ----------------------------- TELEMETRY -----------------------------
+            telemetry.addData("SorterState", sorterState);
+            telemetry.addData("SorterIndex", sorterPositionIndex);
             telemetry.addData("Ball1", colourToString(ball1));
             telemetry.addData("Ball2", colourToString(ball2));
             telemetry.addData("Ball3", colourToString(ball3));
-            telemetry.addData("SorterState", sorterState);
+
+            telemetry.addData("TargetVel", targetVelocity);
+            telemetry.addData("MeasuredVel", measuredVel);
+            telemetry.addData("ShooterReady", shooterReady);
+
+            telemetry.addData("KickerV", "%.3f", kickerAnalog.getVoltage());
+            telemetry.addData("SorterV", "%.3f", sorterAnalog.getVoltage());
+            telemetry.addData("SorterMoveActive", sorterMoveActive);
+            telemetry.addData("KickerPulseState", kickerPulseState);
+
+            telemetry.addData("ShootAllRunning", shootAllRunning);
+            telemetry.addData("ShootAllStep", shootAllStep);
+
+            telemetry.addData("TagVisible", tagVisible);
+            telemetry.addData("TagID", currentTagId);
+            telemetry.addData("tx", "%.2f", lastTx);
+            telemetry.addData("area", "%.4f", lastArea);
+
+            if (!sorterMoveError.isEmpty()) telemetry.addLine("ERR: " + sorterMoveError);
 
             telemetry.update();
         }
     }
 
-    // -------------------------------
-    // Helper: move sorter to a given slot (1,2,3)
-    // -------------------------------
-    private void moveSorterToSlot(int slot) {
-        double basePos;
-        if (slot == 1)      basePos = Variables.sorter1Position;
-        else if (slot == 2) basePos = Variables.sorter2Position;
-        else                basePos = Variables.sorter3Position;
-
-        sorterLeftServo.setPosition(basePos);
-        sorterRightServo.setPosition(basePos + Variables.sorterOffset);
+    // ----------------------------- TURRET AIM (EXACT LIKE YOUR EXAMPLE) -----------------------------
+    private int getBallColorByIndex(int idx) {
+        switch (idx) {
+            case 1:
+                return ball1;
+            case 2:
+                return ball2;
+            case 3:
+                return ball3;
+            default:
+                return -1;
+        }
     }
 
-    // -------------------------------
-    // Helper: shoot a specific slot once (UP -> DOWN pulse)
-    // -------------------------------
-    private void shootSlot(int slot) {
-        moveSorterToSlot(slot);
-        sleep(200);
+    private void buildShootOrderForPattern(int c1, int c2, int c3) {
+        boolean[] used = new boolean[4]; // 1..3
 
-        transferOutputServo.setPosition(Variables.transferUpPosition);
-        sleep(200);
-        transferOutputServo.setPosition(Variables.transferDownPosition);
-        sleep(200);
+        int[] desired = new int[]{c1, c2, c3};
+        int outPos = 0;
 
-        if (slot == 1)      ball1 = -1;
-        else if (slot == 2) ball2 = -1;
-        else                ball3 = -1;
-    }
+        // First pass: match desired colors
+        for (int k = 0; k < 3; k++) {
+            int want = desired[k];
+            int chosen = -1;
 
-    // -------------------------------
-    // Helper: shoot according to pattern (array of 3 colours)
-    // patternColours: e.g. [1,0,0] = GPP
-    // Uses current ball1/2/3 (2 P, 1 G in random order)
-    // -------------------------------
-    private void shootPattern(int[] patternColours) {
-        // Copy ball colours into array for easier handling
-        int[] balls = new int[]{ball1, ball2, ball3};
-        boolean[] used = new boolean[]{false, false, false};
-        int[] slotsToShoot = new int[3];
-
-        // For each required colour in pattern, find a matching slot
-        for (int p = 0; p < 3; p++) {
-            int neededColour = patternColours[p];
-            int chosenSlot = -1;
-
-            for (int s = 0; s < 3; s++) {
-                if (!used[s] && balls[s] == neededColour) {
-                    chosenSlot = s + 1;   // slots are 1-based
-                    used[s] = true;
+            for (int slot = 1; slot <= 3; slot++) {
+                if (!used[slot] && getBallColorByIndex(slot) == want) {
+                    chosen = slot;
                     break;
                 }
             }
 
-            if (chosenSlot == -1) {
-                // Pattern can't be formed from current balls -> abort
-                return;
+            if (chosen != -1) {
+                used[chosen] = true;
+                shootOrder[outPos++] = chosen;
             }
-
-            slotsToShoot[p] = chosenSlot;
         }
 
-        // If we get here, we have a valid mapping.
-        // Shoot in the order determined by slotsToShoot
-        for (int i = 0; i < 3; i++) {
-            int slot = slotsToShoot[i];
-            shootSlot(slot);
+        // Second pass: fill remaining slots (unknown/mismatched colors)
+        for (int slot = 1; slot <= 3; slot++) {
+            if (!used[slot]) {
+                shootOrder[outPos++] = slot;
+                used[slot] = true;
+            }
         }
 
-        // After pattern is fully shot, reset sorter state
-        sorterState = 0;
-        moveSorterToSlot(1);
-        transferOutputServo.setPosition(Variables.transferUpPosition);
+        shootOrderPtr = 0;
+        shootOrderCount = 3;
     }
 
-    // -------------------------------
-    // Colour detection using 2 sensors
-    // returns: 1 = green, 0 = purple, -1 = unknown
-    // -------------------------------
+    private void startShootPattern(int c1, int c2, int c3) {
+        // Aim once (same behavior you already do)
+        aimAtTagSnap_ExactlyLikeExample();
+
+        // Build slot order for this pattern
+        buildShootOrderForPattern(c1, c2, c3);
+
+        intakeWasEnabledBeforeShootAll = intakeEnabled;
+        intakeMotor.set(OUTTAKE_INTAKE_POWER);
+
+        shootAllRunning = true;
+        shootAllStep = 0;
+    }
+
+    private void aimAtTagSnap_ExactlyLikeExample() {
+
+        tagVisible = false;
+        currentTagId = -1;
+        lastTx = 0.0;
+        lastArea = 0.0;
+
+        LLResult result = limelight.getLatestResult();
+        if (result == null || !result.isValid()) {
+            // same behavior: just return
+            return;
+        }
+
+        List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+        if (fiducials == null || fiducials.isEmpty()) {
+            return;
+        }
+
+        // Pick tag EXACTLY like your example
+        LLResultTypes.FiducialResult tag = null;
+        if (TARGET_TAG_ID < 0) {
+            tag = fiducials.get(0);
+        } else {
+            for (LLResultTypes.FiducialResult f : fiducials) {
+                if (f != null && f.getFiducialId() == TARGET_TAG_ID) {
+                    tag = f;
+                    break;
+                }
+            }
+        }
+
+        if (tag == null) {
+            return;
+        }
+
+        tagVisible = true;
+        currentTagId = tag.getFiducialId();
+
+        // Horizontal angle error to tag (degrees). Want tx -> 0 when centered.
+        double txDeg = tag.getTargetXDegrees();
+        lastTx = txDeg;
+        lastArea = tag.getTargetArea();
+
+        // Convert txDeg into a turret correction (EXACT)
+        double turretDeg = (-txDeg) * DIR;
+        int tagid = tag.getFiducialId();
+        if (tagid == 20 && far == false) turretDeg -= 4;
+        if (tagid == 24 && far == false) turretDeg += 4;
+        if (tagid == 20 && far == true) turretDeg -= 2;
+        if (tagid == 24 && far == true) turretDeg += 2;
+
+        // turretDeg -> servoDeg using gear ratio (EXACT)
+        double servoDeg = turretDeg / GEAR_RATIO / 360.0;
+
+        // 360° servo: degrees -> position 0..1 (EXACT)
+        double servoPos = turretServo1.getPosition() + servoDeg;
+
+        turretServo1.setPosition(servoPos);
+        turretServo2.setPosition(servoPos);
+    }
+
+    // ----------------------------- KICKER: STABLE-IN-TOLERANCE CHECK -----------------------------
+
+    private boolean withinTol(double v, double target, double tol) {
+        return Math.abs(v - target) <= tol;
+    }
+
+    private boolean stableAtTarget(double v, double target, double tol) {
+        boolean inTol = withinTol(v, target, tol);
+
+        if (inTol) {
+            if (!kickerStableRunning) {
+                kickerStableRunning = true;
+                kickerStableTimer.reset();
+            }
+            return kickerStableTimer.milliseconds() >= KICKER_STABLE_MS;
+        } else {
+            kickerStableRunning = false;
+            return false;
+        }
+    }
+
+    private void startKickerPulse() {
+        kickerPulseState = KickerPulseState.COMMAND_DOWN;
+        kickerPulseTimer.reset();
+        kickerStableRunning = false;
+    }
+
+    private void updateKickerPulse() {
+        if (kickerPulseState == KickerPulseState.IDLE) return;
+
+        double v = kickerAnalog.getVoltage();
+
+        switch (kickerPulseState) {
+
+            case COMMAND_DOWN:
+                kickerTopServo.setPosition(0.85);
+                kickerBottomServo.setPosition(0.85);
+                kickerPulseState = KickerPulseState.WAIT_DOWN;
+                kickerPulseTimer.reset();
+                kickerStableRunning = false;
+                break;
+
+            case WAIT_DOWN: {
+                boolean reachedDownStable = stableAtTarget(v, KICKER_DOWN_V, KICKER_V_TOL);
+                boolean minDownTimeOk = kickerPulseTimer.milliseconds() >= KICKER_MIN_DOWN_MS;
+                boolean timedOut = kickerPulseTimer.milliseconds() > KICKER_TIMEOUT_MS;
+
+                if ((reachedDownStable && minDownTimeOk) || timedOut) {
+                    kickerPulseState = KickerPulseState.COMMAND_UP;
+                    kickerStableRunning = false;
+                }
+                break;
+            }
+
+            case COMMAND_UP:
+                kickerTopServo.setPosition(0.99);
+                kickerBottomServo.setPosition(0.99);
+                kickerPulseState = KickerPulseState.WAIT_UP;
+                kickerPulseTimer.reset();
+                kickerStableRunning = false;
+                break;
+
+            case WAIT_UP: {
+                boolean reachedUpStable = stableAtTarget(v, KICKER_UP_V, KICKER_V_TOL);
+                boolean timedOut = kickerPulseTimer.milliseconds() > KICKER_TIMEOUT_MS;
+
+                if (reachedUpStable || timedOut) {
+                    kickerPulseState = KickerPulseState.IDLE;
+                    kickerStableRunning = false;
+                }
+                break;
+            }
+
+            case IDLE:
+                break;
+        }
+    }
+
+    private boolean kickerPulseFinished() {
+        return kickerPulseState == KickerPulseState.IDLE;
+    }
+
+    // ----------------------------- SORTER VOLTAGE TARGETING -----------------------------
+
+    private double intakeVoltageForIndex(int index) {
+        switch (index) {
+            case 1:
+                return SORTER_INTAKE_1_V;
+            case 2:
+                return SORTER_INTAKE_2_V;
+            case 3:
+                return SORTER_INTAKE_3_V;
+            default:
+                return SORTER_INTAKE_1_V;
+        }
+    }
+
+    private double outtakeVoltageForIndex(int index) {
+        switch (index) {
+            case 1:
+                return SORTER_OUTTAKE_1_V;
+            case 2:
+                return SORTER_OUTTAKE_2_V;
+            case 3:
+                return SORTER_OUTTAKE_3_V;
+            default:
+                return SORTER_OUTTAKE_1_V;
+        }
+    }
+
+    private void requestSorterMoveToIndexIntake(int index) {
+        moveSorterToIndex(index);
+
+        sorterTargetV = intakeVoltageForIndex(index);
+        sorterMoveActive = true;
+        sorterMoveTimer.reset();
+        sorterMoveError = "";
+    }
+
+    private void requestSorterMoveToIndexOuttakeHardcoded(int index) {
+        if (index == 1) {
+            sorterLeftServo.setPosition(0.54);
+            sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
+        } else if (index == 2) {
+            sorterLeftServo.setPosition(0.93);
+            sorterRightServo.setPosition(0.93 + Variables.sorterOffset);
+        } else {
+            sorterLeftServo.setPosition(0.16);
+            sorterRightServo.setPosition(0.16 + Variables.sorterOffset);
+        }
+
+        sorterTargetV = outtakeVoltageForIndex(index);
+        sorterMoveActive = true;
+        sorterMoveTimer.reset();
+        sorterMoveError = "";
+    }
+
+    private void updateSorterMove() {
+        if (!sorterMoveActive) return;
+
+        double v = sorterAnalog.getVoltage();
+
+        if (withinTol(v, sorterTargetV, SORTER_V_TOL)) {
+            sorterMoveActive = false;
+            return;
+        }
+
+        if (sorterMoveTimer.milliseconds() > SORTER_TIMEOUT_MS) {
+            sorterMoveError = "SORTER TIMEOUT (check analog wire / tol / targetV)";
+            sorterMoveActive = false;
+        }
+    }
+
+    // ----------------------------- SHOOT ALL SEQUENCE -----------------------------
+
+    private void updateShootAllSequence() {
+
+        // which slot (1..3) are we shooting right now?
+        int currentSlot = shootOrder[Math.min(shootOrderPtr, 2)];
+
+        switch (shootAllStep) {
+
+            case 0:
+                // move sorter to the slot we want to shoot
+                requestSorterMoveToIndexOuttakeHardcoded(currentSlot);
+                shootAllStep = 1;
+                break;
+
+            case 1:
+                if (!sorterMoveActive) {
+                    startKickerPulse();
+                    shootAllStep = 2;
+                }
+                break;
+
+            case 2:
+                if (kickerPulseFinished()) {
+                    shootOrderPtr++;
+
+                    if (shootOrderPtr < shootOrderCount) {
+                        // next slot
+                        shootAllStep = 0;
+                    } else {
+                        // done all 3
+                        shootAllStep = 99;
+                    }
+                }
+                break;
+
+            case 99:
+                // reset after shooting
+                ball1 = ball2 = ball3 = -1;
+                sorterState = 0;
+
+                requestSorterMoveToIndexIntake(1);
+
+                shootAllRunning = false;
+                intakeMotor.set(1.0);
+                intakeEnabled = true;
+
+                turretServo1.setPosition(0.5);
+                turretServo2.setPosition(0.5);
+
+                targetVelocity = 0;
+                break;
+        }
+    }
+
+
+    // ----------------------------- SORTER INTAKE POSITIONS -----------------------------
+
+    private void moveSorterToIndex(int index) {
+        switch (index) {
+            case 1:
+                sorterLeftServo.setPosition(Variables.sorter1Position);
+                sorterRightServo.setPosition(Variables.sorter1Position + Variables.sorterOffset);
+                break;
+            case 2:
+                sorterLeftServo.setPosition(Variables.sorter2Position);
+                sorterRightServo.setPosition(Variables.sorter2Position + Variables.sorterOffset);
+                break;
+            case 3:
+                sorterLeftServo.setPosition(Variables.sorter3Position);
+                sorterRightServo.setPosition(Variables.sorter3Position + Variables.sorterOffset);
+                break;
+        }
+        sorterPositionIndex = index;
+    }
+
+    // ----------------------------- COLOR DETECTION -----------------------------
+
     private int detectColourFromTwoSensors() {
+        double gOverRFront = (double) sensorColorFront.green() / Math.max(sensorColorFront.red(), 1);
+        double gOverBFront = (double) sensorColorFront.green() / Math.max(sensorColorFront.blue(), 1);
 
-        double gOverRFront = (double) sensorColorFront.green() /
-                Math.max(sensorColorFront.red(), 1);
-        double gOverBFront = (double) sensorColorFront.green() /
-                Math.max(sensorColorFront.blue(), 1);
+        double gOverRBack = (double) sensorColorBack.green() / Math.max(sensorColorBack.red(), 1);
+        double gOverBBack = (double) sensorColorBack.green() / Math.max(sensorColorBack.blue(), 1);
 
-        double gOverRBack = (double) sensorColorBack.green() /
-                Math.max(sensorColorBack.red(), 1);
-        double gOverBBack = (double) sensorColorBack.green() /
-                Math.max(sensorColorBack.blue(), 1);
-
-        // GREEN (either sensor)
         if ((sensorColorFront.green() > sensorColorFront.red() &&
                 sensorColorFront.green() > sensorColorFront.blue() &&
                 gOverRFront > 1.7 && gOverBFront > 1.15)
-
                 || (sensorColorBack.green() > sensorColorBack.red() &&
                 sensorColorBack.green() > sensorColorBack.blue() &&
                 gOverRBack > 1.9 && gOverBBack > 1.2)) {
-
-            return 1;   // green
+            return 1; // Green
         }
 
-        // PURPLE (either sensor)
         if ((sensorColorFront.green() < sensorColorFront.blue() &&
                 gOverRFront < 1.4 && gOverBFront < 0.8)
-
                 || (sensorColorBack.green() < sensorColorBack.blue() &&
-                gOverRBack < 1.4 && gOverBBack < 0.8)) {
-
-            return 0;   // purple
+                gOverBBack < 0.8 && gOverRBack < 1.4)) {
+            return 0; // Purple
         }
 
-        return -1;  // unknown
+        return -1;
     }
 
-    // -------------------------------
-    // Helper for telemetry text
-    // -------------------------------
     private String colourToString(int c) {
         switch (c) {
-            case 1:  return "Green (1)";
-            case 0:  return "Purple (0)";
-            default: return "Unknown (-1)";
+            case 1: return "Green";
+            case 0: return "Purple";
+            default: return "Unknown";
         }
     }
 }
