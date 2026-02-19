@@ -22,8 +22,8 @@ import org.firstinspires.ftc.teamcode.Variables;
 
 import java.util.List;
 
-@TeleOp(name = "NewTeleOp")
-public class NewTeleOp extends LinearOpMode {
+@TeleOp(name = "teleOp")
+public class teleOp extends LinearOpMode {
 
     // ----------------------------- DRIVETRAIN -----------------------------
     private Motor fL, fR, bL, bR;
@@ -34,7 +34,7 @@ public class NewTeleOp extends LinearOpMode {
     private DcMotorEx shooterLeft, shooterRight;
     private Servo shooterAngleServo;
     private double shooterAnglePos = 0.0;
-private double temp = 0;
+
     private static final int CPR = 28;
     private static final int MAX_RPM = 6000;
     private static final int MAX_TICKS_PER_SEC = (MAX_RPM / 60) * CPR;
@@ -100,7 +100,6 @@ private double temp = 0;
     private boolean sorterMoveActive = false;
     private double sorterTargetV = 0.0;
     private final ElapsedTime sorterMoveTimer = new ElapsedTime();
-    private final ElapsedTime newTimer = new ElapsedTime();
     private String sorterMoveError = "";
 
     // ----------------------------- KICKER STATE MACHINE -----------------------------
@@ -358,10 +357,8 @@ private double temp = 0;
                             case 2:
                                 ball3 = pendingColor;
                                 sorterState = 3;
-                                sorterLeftServo.setPosition(0.93);
-                                sorterRightServo.setPosition(0.93 + Variables.sorterOffset);
-                                //sorterLeftServo.setPosition(0.54);
-                                //sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
+                                sorterLeftServo.setPosition(0.54);
+                                sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
                                 intakeMotor.set(0);
                                 intakeEnabled = false;
                                 break;
@@ -378,8 +375,6 @@ private double temp = 0;
             }
 
             // ----------------------------- TELEMETRY -----------------------------
-            telemetry.addData("time", temp);
-
             telemetry.addData("SorterState", sorterState);
             telemetry.addData("SorterIndex", sorterPositionIndex);
             telemetry.addData("Ball1", colourToString(ball1));
@@ -623,8 +618,7 @@ private double temp = 0;
         switch (shootAllStep) {
 
             case 0:
-                newTimer.reset();
-                requestSorterMoveToIndexOuttakeHardcoded(2);
+                requestSorterMoveToIndexOuttakeHardcoded(1);
                 shootAllStep = 1;
                 break;
 
@@ -637,7 +631,7 @@ private double temp = 0;
 
             case 2:
                 if (kickerPulseFinished()) {
-                    requestSorterMoveToIndexOuttakeHardcoded(1);
+                    requestSorterMoveToIndexOuttakeHardcoded(2);
                     shootAllStep = 3;
                 }
                 break;
@@ -675,9 +669,7 @@ private double temp = 0;
                     intakeEnabled = true;
                     //turretServo1.setPosition(0.5);
                     //turretServo2.setPosition(0.5);
-                    //targetVelocity = 0;
-                    temp = newTimer.seconds();
-                    newTimer.reset();
+                    targetVelocity = 0;
 
                 }
                 break;
