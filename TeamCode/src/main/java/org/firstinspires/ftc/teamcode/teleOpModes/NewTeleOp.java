@@ -221,21 +221,13 @@ private double temp = 0;
                 if (gamepad1.left_bumper) { intakeMotor.set(-1); intakeEnabled = false; }
             }
 
-            if (gamepad1.right_bumper && gamepad1.left_trigger < 0.5){
+            if (gamepad1.share){
                 turretServo1.setPosition(0.93);
                 turretServo2.setPosition(0.93);
             }
-            if (gamepad1.right_bumper && gamepad1.left_trigger > 0.5){
+            if (gamepad1.options){
                 turretServo1.setPosition(0.07);
                 turretServo2.setPosition(0.07);
-            }
-
-            // ----------------------------- MANUAL KICKER RESET -----------------------------
-            if (gamepad1.dpad_left && gamepad1.left_trigger < 0.5) {
-                kickerTopServo.setPosition(0.98);
-                kickerBottomServo.setPosition(0.98);
-                kickerPulseState = KickerPulseState.IDLE;
-                kickerStableRunning = false;
             }
 
             // ----------------------------- SHOOT ALL -----------------------------
@@ -272,8 +264,6 @@ private double temp = 0;
                 far = true;
             }
 
-            if (gamepad1.dpad_up) targetVelocity += 2;
-            if (gamepad1.dpad_down) targetVelocity -= 2;
 
             if (gamepad1.guide) {
                 targetVelocity = 0;
@@ -283,18 +273,6 @@ private double temp = 0;
                 turretServo2.setPosition(0.5);
                 kickerTopServo.setPosition(0.98);
                 kickerBottomServo.setPosition(0.98);
-            }
-
-            if (gamepad1.share && shooterAnglePos > 0.05) {
-                shooterAnglePos -= 0.02;
-                shooterAngleServo.setPosition(shooterAnglePos);
-                sleep(300);
-            }
-
-            if (gamepad1.options && shooterAnglePos < 0.45) {
-                shooterAnglePos += 0.02;
-                shooterAngleServo.setPosition(shooterAnglePos);
-                sleep(300);
             }
 
             targetVelocity = Math.max(0, Math.min(MAX_TICKS_PER_SEC, targetVelocity));
