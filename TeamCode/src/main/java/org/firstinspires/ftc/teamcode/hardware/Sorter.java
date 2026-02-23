@@ -64,17 +64,17 @@ public class Sorter {
     // -----------------------------
     // VOLTAGES YOU MEASURED
     // -----------------------------
-    private static final double INTAKE_1_V  = 0.2200;
-    private static final double INTAKE_2_V  = 1.2850;
-    private static final double INTAKE_3_V  = 2.3640;
+    private static final double INTAKE_1_V  = 0.2225;
+    private static final double INTAKE_2_V  = 0.756;
+    private static final double INTAKE_3_V  = 1.2995;
 
-    private static final double OUTTAKE_1_V = 1.7425;
-    private static final double OUTTAKE_2_V = 2.8405;
-    private static final double OUTTAKE_3_V = 0.6715;
+    private static final double OUTTAKE_1_V = 0.985;
+    private static final double OUTTAKE_2_V = 1.53;
+    private static final double OUTTAKE_3_V = 0.445;
 
     // Simple tolerance + timeout
     private static final double SORTER_TOL_V = 0.05;
-    private static final double SORTER_TIMEOUT_S = 1.0;
+    private static final double SORTER_TIMEOUT_S = 0.45; //1
 
     public Sorter(HardwareMap hardwareMap) {
         sorterLeftServo = hardwareMap.get(Servo.class, "sorterLeftServo");
@@ -126,9 +126,9 @@ public class Sorter {
         double basePos;
         switch (slotIndex) {
             default:
-            case 0: basePos = 0.0;   break;   // dpad_down
-            case 1: basePos = 0.375; break;   // dpad_left
-            case 2: basePos = 0.76;  break;   // dpad_right
+            case 0: basePos = Variables.sorter1Position;   break;   // dpad_down
+            case 1: basePos = Variables.sorter2Position; break;   // dpad_left
+            case 2: basePos = Variables.sorter3Position;  break;   // dpad_right
         }
         sorterLeftServo.setPosition(basePos);
         sorterRightServo.setPosition(basePos + Variables.sorterOffset);
@@ -138,9 +138,9 @@ public class Sorter {
         double basePos;
         switch (slotIndex) {
             default:
-            case 0: basePos = 0.54; break;   // share
-            case 1: basePos = 0.93; break;   // options
-            case 2: basePos = 0.16; break;   // guide
+            case 0: basePos = Variables.sorter1OuttakePosition; break;   // share
+            case 1: basePos = Variables.sorter2OuttakePosition; break;   // options
+            case 2: basePos = Variables.sorter3OuttakePosition; break;   // guide
         }
         sorterLeftServo.setPosition(basePos);
         sorterRightServo.setPosition(basePos + Variables.sorterOffset);

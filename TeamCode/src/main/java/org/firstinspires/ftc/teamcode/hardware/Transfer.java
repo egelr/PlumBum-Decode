@@ -18,15 +18,15 @@ public class Transfer {
 
     // positions you gave
     private static final double KICKER_UP_POS = 0.88;
-    private static final double KICKER_DOWN_POS = 0.99;
+    private static final double KICKER_DOWN_POS = 0.98;
 
     // measured voltages
-    private static final double KICKER_DOWN_V = 3.0025;
+    private static final double KICKER_DOWN_V = 2.987;
     private static final double KICKER_UP_V   = 2.7495;
 
     // simple tolerance + timeout
     private static final double TOL_V = 0.04;       // +/- 0.04V
-    private static final double TIMEOUT_S = 1.0;    // 1 second max wait
+    private static final double TIMEOUT_S = 0.35;    // 1 second max wait
 
     public Transfer(HardwareMap hardwareMap) {
         kickerTopServo = hardwareMap.get(Servo.class, "kickerTopServo");

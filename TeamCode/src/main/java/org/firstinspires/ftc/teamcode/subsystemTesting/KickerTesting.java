@@ -34,8 +34,8 @@ public class KickerTesting extends LinearOpMode {
                 kickerBottomServo.setPosition(0.85);
             }
             if (gamepad1.circle) {
-                kickerTopServo.setPosition(0.99);
-                kickerBottomServo.setPosition(0.99);
+                kickerTopServo.setPosition(0.98);
+                kickerBottomServo.setPosition(0.98);
             }
             if (gamepad1.square) {
                 kickerTopServo.setPosition(1);

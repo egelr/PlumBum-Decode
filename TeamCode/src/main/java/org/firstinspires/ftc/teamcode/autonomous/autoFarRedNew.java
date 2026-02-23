@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -25,8 +24,8 @@ import org.firstinspires.ftc.teamcode.hardware.Turret;
 import org.firstinspires.ftc.teamcode.hardware.AprilTagDetector;
 
 @Config
-@Autonomous(name = "RED", group = "Autonomous")
-public class autoRed extends LinearOpMode {
+@Autonomous(name = "FAR RED new", group = "Autonomous")
+public class autoFarRedNew extends LinearOpMode {
 
     // Fallback desired output pattern if no tag is mapped
     public static String TARGET_PATTERN = "PPG";
@@ -54,61 +53,31 @@ public class autoRed extends LinearOpMode {
         // -------------------- LIMELIGHT (WORKING-STYLE DETECTOR) --------------------
         Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
         AprilTagDetector detector = new AprilTagDetector(limelight, telemetry);
+        //detector.init(); // same as your old working setup: pollRate, pipelineSwitch, start
 
         // -------------------- TRAJECTORY (SIMPLE TEST) --------------------
         TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
-                .setReversed(true)
-                .strafeToLinearHeading(new Vector2d(-52, 18), Math.toRadians(-90));
-
-        TrajectoryActionBuilder firstIntakingTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                // Blue: -6, 1, 9  -> Red: 6, -1, -9
-                .lineToY(7)
-                .waitSeconds(0.1)
-                .lineToY(0)
-                .waitSeconds(0.1)
-                .lineToY(-8);
-
-        TrajectoryActionBuilder secondShootingTrajectory = firstIntakingTrajectory.endTrajectory().fresh()
-                .setReversed(true)
-                // Blue: -17 -> Red: 17
-                .lineToY(17);
-
-        TrajectoryActionBuilder secondIntakingTrajectory = secondShootingTrajectory.endTrajectory().fresh()
+                .strafeToLinearHeading(new Vector2d(23, 7), Math.toRadians(-90));
+        TrajectoryActionBuilder ballIntakeTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(-77, 14), Math.toRadians(-93.5));
-
-        TrajectoryActionBuilder secondIntakingTrajectory2 = secondIntakingTrajectory.endTrajectory().fresh()
+                .strafeToLinearHeading(new Vector2d(57, 18), Math.toRadians(-90));
+        TrajectoryActionBuilder ballIntakeTrajectory2 = ballIntakeTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .lineToY(8)
+                .lineToY(12)
                 .waitSeconds(0.1)
-                .lineToY(3.5)
+                .lineToY(6)
                 .waitSeconds(0.1)
-                .lineToY(-8);
+                .lineToY(0);
 
-        TrajectoryActionBuilder thirdShootingTrajectory = secondIntakingTrajectory2.endTrajectory().fresh()
-                .setReversed(true)
-                .strafeTo(new Vector2d(-48, 20));
 
-        TrajectoryActionBuilder thirdIntakingTrajectory = thirdShootingTrajectory.endTrajectory().fresh()
-                .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(-102, 14), Math.toRadians(-95));
-        TrajectoryActionBuilder thirdIntakingTrajectory2 = thirdIntakingTrajectory.endTrajectory().fresh()
-                .setReversed(false)
-                .lineToY(10)
-                .waitSeconds(0.1)
-                .lineToY(4)
-                .waitSeconds(0.1)
-                .lineToY(-5);
+
+
 
         Action cameraDetectionTrajectoryAction = cameraDetectionTrajectory.build();
-        Action firstIntakingTrajectoryAction = firstIntakingTrajectory.build();
-        Action secondShootingTrajectoryAction = secondShootingTrajectory.build();
-        Action secondIntakingTrajectoryAction = secondIntakingTrajectory.build();
-        Action secondIntakingTrajectory2Action = secondIntakingTrajectory2.build();
-        Action thirdShootingTrajectoryAction = thirdShootingTrajectory.build();
-        Action thirdIntakingTrajectoryAction = thirdIntakingTrajectory.build();
-        Action thirdIntakingTrajectory2Action = thirdIntakingTrajectory2.build();
+        Action ballIntakeTrajectoryAction = ballIntakeTrajectory.build();
+        Action ballIntakeTrajectory2Action = ballIntakeTrajectory2.build();
+
 
         // Preset transfer
         Actions.runBlocking(transfer.preset());
@@ -116,9 +85,17 @@ public class autoRed extends LinearOpMode {
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
+            //Integer previewId = detector.getTagIdFromLimelightOnce();
+            //String previewPattern = AprilTagDetector.mapTagIdToPattern(previewId);
+
+            //telemetry.addData("Preview Tag ID", previewId);
+            //telemetry.addData("Preview Pattern (mapped)", previewPattern);
             telemetry.addData("Fallback Pattern", TARGET_PATTERN);
+
+            // Also show globals (should be null in init unless you call detect)
             telemetry.addData("Global lastTagId", AprilTagDetector.lastTagId);
             telemetry.addData("Global lastPattern", AprilTagDetector.lastPattern);
+
             telemetry.update();
         }
 
@@ -128,20 +105,19 @@ public class autoRed extends LinearOpMode {
         // -------------------- STEP 1: MOVE + TURRET --------------------
         Actions.runBlocking(
                 new ParallelAction(
-                        shooter.ShooterOn(),
+                        //shooter.ShooterOnFar(),
                         sorter.loadedBalls(),
-                        cameraDetectionTrajectoryAction,
-                        new SequentialAction(
-                                new SleepAction(0.5),
-                                detector.detectWithTimeout(3)
-                        )
+                        detector.detectWithTimeout(4)
                 )
         );
 
         // -------------------- STEP 2: DETECT (SAME STYLE AS YOUR WORKING CODE) --------------------
 
 
+        // Fallback logic (same idea as before)
         if (AprilTagDetector.lastPattern == null) AprilTagDetector.lastPattern = TARGET_PATTERN;
+        //if (desired == null) desired = "PPG";
+        //desired = desired.toUpperCase();
         if (AprilTagDetector.lastPattern.length() != 3) AprilTagDetector.lastPattern = "PPG";
 
         Integer usedTagId = AprilTagDetector.lastTagId;
@@ -158,45 +134,15 @@ public class autoRed extends LinearOpMode {
         // -------------------- STEP 3: SHOOT ONCE (TEST) --------------------
         Actions.runBlocking(
                 new SequentialAction(
-                        turret.halfLeft1(),
-                        new SleepAction(0.5),
+                        turret.farRightNew(),
                         intake.IntakeHolding(),
-                        patternShooter.shootPatternMid(AprilTagDetector.lastPattern, "PGP"),
-                        sorter.preset(),
+                        //patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
+                        cameraDetectionTrajectoryAction,
+                        ballIntakeTrajectoryAction,
                         new ParallelAction(
-                                firstIntakingTrajectoryAction,
                                 sorter.intakeAndLoadThree(),
-                                turret.halfLeft2()
-                        ),
-                        new ParallelAction(
-                                intake.IntakeHolding(),
-                                sorter.preset(),
-                                secondShootingTrajectoryAction
-                        ),
-                        patternShooter.shootPatternMid(AprilTagDetector.lastPattern, "PPG"),
-                        intake.IntakeOff(),
-                                new ParallelAction(
-                                secondIntakingTrajectoryAction,
-                                sorter.preset()),
-                        new ParallelAction(
-                                secondIntakingTrajectory2Action,
-                                sorter.intakeAndLoadThree(),
-                                shooter.ShooterOn(),
-                                turret.halfLeft3()
-                        ),
-                        new ParallelAction(
-                                intake.IntakeHolding(),
-                                thirdShootingTrajectoryAction),
-                        patternShooter.shootPatternMid(AprilTagDetector.lastPattern, "PGP"),
-                        intake.IntakeOff(),
-                        new ParallelAction(
-                                thirdIntakingTrajectoryAction,
-                                sorter.preset()),
-                        new ParallelAction(
-                        thirdIntakingTrajectory2Action,
-                        sorter.intakeAndLoadThree()
+                                ballIntakeTrajectory2Action)
                 )
-            )
         );
 
         telemetry.addData("DONE", true);

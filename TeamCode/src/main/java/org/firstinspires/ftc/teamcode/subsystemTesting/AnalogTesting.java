@@ -39,13 +39,13 @@ public class AnalogTesting extends LinearOpMode {
             // ---------------- KICKER TESTING ----------------
             //up
             if (gamepad1.triangle) {
-                kickerTopServo.setPosition(0.88);
-                kickerBottomServo.setPosition(0.88);
+                kickerTopServo.setPosition(0.85);
+                kickerBottomServo.setPosition(0.85);
             }
             //down
             if (gamepad1.circle) {
-                kickerTopServo.setPosition(0.99);
-                kickerBottomServo.setPosition(0.99);
+                kickerTopServo.setPosition(0.98);
+                kickerBottomServo.setPosition(0.98);
             }
             if (gamepad1.square) {
                 kickerTopServo.setPosition(1.0);
@@ -60,27 +60,27 @@ public class AnalogTesting extends LinearOpMode {
             }
             //intake second
             if (gamepad1.dpad_left) {
-                sorterLeftServo.setPosition( 0.375);
-                sorterRightServo.setPosition( 0.375 + Variables.sorterOffset);
+                sorterLeftServo.setPosition( 0.19);
+                sorterRightServo.setPosition( 0.19 + Variables.sorterOffset);
             }//intake third
             if (gamepad1.dpad_right) {
-                sorterLeftServo.setPosition(0.76);
-                sorterRightServo.setPosition(0.76 + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.38);
+                sorterRightServo.setPosition(0.38 + Variables.sorterOffset);
             }
             //first sorter shooting slot
             if (gamepad1.share) {
-                sorterLeftServo.setPosition(0.54);
-                sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.27);
+                sorterRightServo.setPosition(0.27 + Variables.sorterOffset);
             }
             //second sorter shooting slot
             if (gamepad1.options) {
-                sorterLeftServo.setPosition(0.93);
-                sorterRightServo.setPosition(0.93 + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.465);
+                sorterRightServo.setPosition(0.465 + Variables.sorterOffset);
             }
             //third sorter shooting slot
             if (gamepad1.guide) {
-                sorterLeftServo.setPosition(0.16);
-                sorterRightServo.setPosition(0.16 + Variables.sorterOffset);
+                sorterLeftServo.setPosition(0.08);
+                sorterRightServo.setPosition(0.08 + Variables.sorterOffset);
             }
 
 

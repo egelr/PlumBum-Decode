@@ -52,19 +52,19 @@ private double temp = 0;
 
     private AnalogInput kickerAnalog, sorterAnalog;
 
-    private static final double KICKER_DOWN_V = 3.0025;
-    private static final double KICKER_UP_V   = 2.7495;
+    private static final double KICKER_DOWN_V = 2.987;
+    private static final double KICKER_UP_V   = 2.62;
 
-    private static final double SORTER_INTAKE_1_V  = 0.2200;
-    private static final double SORTER_INTAKE_2_V  = 1.2850;
-    private static final double SORTER_INTAKE_3_V  = 2.3640;
+    private static final double SORTER_INTAKE_1_V  = 0.2225;
+    private static final double SORTER_INTAKE_2_V  = 0.756;
+    private static final double SORTER_INTAKE_3_V  = 1.2995;
 
-    private static final double SORTER_OUTTAKE_1_V = 1.7425;
-    private static final double SORTER_OUTTAKE_2_V = 2.8405;
-    private static final double SORTER_OUTTAKE_3_V = 0.6715;
+    private static final double SORTER_OUTTAKE_1_V = 0.985;
+    private static final double SORTER_OUTTAKE_2_V = 1.53;
+    private static final double SORTER_OUTTAKE_3_V = 0.445;
 
-    private static final double KICKER_V_TOL = 0.030;
-    private static final double SORTER_V_TOL = 0.030;
+    private static final double KICKER_V_TOL = 0.050;
+    private static final double SORTER_V_TOL = 0.050;
 
     private static final long KICKER_TIMEOUT_MS = 350;
     private static final long SORTER_TIMEOUT_MS = 450;
@@ -216,7 +216,7 @@ private double temp = 0;
 
             // ----------------------------- INTAKE -----------------------------
             if (!shootAllRunning) {
-                if (gamepad1.triangle) { intakeMotor.set(1); sorterLeftServo.setPosition(0); sorterRightServo.setPosition(0 + Variables.sorterOffset); intakeEnabled = true; }
+                if (gamepad1.triangle) { intakeMotor.set(1); sorterLeftServo.setPosition(Variables.sorter1Position); sorterRightServo.setPosition(Variables.sorter1Position + Variables.sorterOffset); intakeEnabled = true; }
                 if (gamepad1.cross)    { intakeMotor.set(0); intakeEnabled = false; }
                 if (gamepad1.left_bumper) { intakeMotor.set(-1); intakeEnabled = false; }
             }
@@ -232,8 +232,8 @@ private double temp = 0;
 
             // ----------------------------- MANUAL KICKER RESET -----------------------------
             if (gamepad1.dpad_left && gamepad1.left_trigger < 0.5) {
-                kickerTopServo.setPosition(0.99);
-                kickerBottomServo.setPosition(0.99);
+                kickerTopServo.setPosition(0.98);
+                kickerBottomServo.setPosition(0.98);
                 kickerPulseState = KickerPulseState.IDLE;
                 kickerStableRunning = false;
             }
@@ -281,8 +281,8 @@ private double temp = 0;
                 shooterAngleServo.setPosition(shooterAnglePos);
                 turretServo1.setPosition(0.5);
                 turretServo2.setPosition(0.5);
-                kickerTopServo.setPosition(0.99);
-                kickerBottomServo.setPosition(0.99);
+                kickerTopServo.setPosition(0.98);
+                kickerBottomServo.setPosition(0.98);
             }
 
             if (gamepad1.share && shooterAnglePos > 0.05) {
@@ -358,8 +358,8 @@ private double temp = 0;
                             case 2:
                                 ball3 = pendingColor;
                                 sorterState = 3;
-                                sorterLeftServo.setPosition(0.93);
-                                sorterRightServo.setPosition(0.93 + Variables.sorterOffset);
+                                sorterLeftServo.setPosition(Variables.sorter2OuttakePosition);
+                                sorterRightServo.setPosition(Variables.sorter2OuttakePosition + Variables.sorterOffset);
                                 //sorterLeftServo.setPosition(0.54);
                                 //sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
                                 intakeMotor.set(0);
@@ -508,7 +508,7 @@ private double temp = 0;
 
             case COMMAND_DOWN:
                 kickerTopServo.setPosition(0.85);
-                kickerBottomServo.setPosition(0.85);
+                kickerBottomServo.setPosition(0.85); //0.85
                 kickerPulseState = KickerPulseState.WAIT_DOWN;
                 kickerPulseTimer.reset();
                 kickerStableRunning = false;
@@ -585,14 +585,14 @@ private double temp = 0;
 
     private void requestSorterMoveToIndexOuttakeHardcoded(int index) {
         if (index == 1) {
-            sorterLeftServo.setPosition(0.54);
-            sorterRightServo.setPosition(0.54 + Variables.sorterOffset);
+            sorterLeftServo.setPosition(Variables.sorter1OuttakePosition);
+            sorterRightServo.setPosition(Variables.sorter1OuttakePosition + Variables.sorterOffset);
         } else if (index == 2) {
-            sorterLeftServo.setPosition(0.93);
-            sorterRightServo.setPosition(0.93 + Variables.sorterOffset);
+            sorterLeftServo.setPosition(Variables.sorter2OuttakePosition);
+            sorterRightServo.setPosition(Variables.sorter2OuttakePosition + Variables.sorterOffset);
         } else {
-            sorterLeftServo.setPosition(0.16);
-            sorterRightServo.setPosition(0.16 + Variables.sorterOffset);
+            sorterLeftServo.setPosition(Variables.sorter3OuttakePosition);
+            sorterRightServo.setPosition(Variables.sorter3OuttakePosition + Variables.sorterOffset);
         }
 
         sorterTargetV = outtakeVoltageForIndex(index);
