@@ -17,12 +17,12 @@ public class Transfer {
     private final AnalogInput kickerAnalog;
 
     // positions you gave
-    private static final double KICKER_UP_POS = 0.88;
+    private static final double KICKER_UP_POS = 0.85;
     private static final double KICKER_DOWN_POS = 0.98;
 
     // measured voltages
     private static final double KICKER_DOWN_V = 2.987;
-    private static final double KICKER_UP_V   = 2.7495;
+    private static final double KICKER_UP_V   = 2.62;
 
     // simple tolerance + timeout
     private static final double TOL_V = 0.04;       // +/- 0.04V
