@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystemTesting;
 
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -23,11 +24,17 @@ public class SensorTesting extends LinearOpMode {
     ColorSensor sensorColorBack;
     DistanceSensor sensorDistanceBack;
 
+    private Motor intakeMotor;
+
+
+
 
     // Default value (in case neither condition matches)
     int colour = -1;
     @Override
     public void runOpMode() throws InterruptedException {
+
+        intakeMotor = new Motor(hardwareMap, "intakeMotor", Motor.GoBILDA.RPM_435);
 
 
         sensorColorFront = hardwareMap.get(ColorSensor.class, "colourSensorFront");
@@ -81,6 +88,8 @@ public class SensorTesting extends LinearOpMode {
             else {
                 colour = -1;
             };
+
+            intakeMotor.set(1);
 
             telemetry.addData("Distance F (cm)",
                     String.format(Locale.US, "%.02f",

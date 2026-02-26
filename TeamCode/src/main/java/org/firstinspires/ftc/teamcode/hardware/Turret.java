@@ -131,8 +131,8 @@ public class Turret {
     public class right implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo1.setPosition(0.2); //0.12
-            turretServo2.setPosition(0.2); //0
+            turretServo1.setPosition(0.24); //0.12
+            turretServo2.setPosition(0.24); //0
             return false;
         }
     }
@@ -164,5 +164,18 @@ public class Turret {
 
     public Action preset() {
         return new Turret.preset();
+    }
+    public class farAutoRedPreset implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo1.setPosition(0.1);
+            turretServo2.setPosition(0.1);
+            return false;
+        }
+
+    }
+
+    public Action farAutoRedPreset() {
+        return new Turret.farAutoRedPreset();
     }
 }

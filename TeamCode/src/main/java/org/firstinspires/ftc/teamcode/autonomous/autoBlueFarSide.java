@@ -24,8 +24,8 @@ import org.firstinspires.ftc.teamcode.hardware.Turret;
 import org.firstinspires.ftc.teamcode.hardware.AprilTagDetector;
 
 @Config
-@Autonomous(name = "FAR RED new", group = "Autonomous")
-public class autoFarRedNew extends LinearOpMode {
+@Autonomous(name = "FAR BLUE side", group = "Autonomous")
+public class autoBlueFarSide extends LinearOpMode {
 
     // Fallback desired output pattern if no tag is mapped
     public static String TARGET_PATTERN = "PPG";
@@ -56,32 +56,44 @@ public class autoFarRedNew extends LinearOpMode {
         //detector.init(); // same as your old working setup: pollRate, pipelineSwitch, start
 
         // -------------------- TRAJECTORY (SIMPLE TEST) --------------------
-        TrajectoryActionBuilder cameraDetectionTrajectory = drive.actionBuilder(initialPose)
+
+        TrajectoryActionBuilder ballIntakeTrajectory = drive.actionBuilder(initialPose)
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(23, 7), Math.toRadians(-90));
-        TrajectoryActionBuilder ballIntakeTrajectory = cameraDetectionTrajectory.endTrajectory().fresh()
-                .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(57, 18), Math.toRadians(-90));
+                .strafeToLinearHeading(new Vector2d(16, -30), Math.toRadians(0));
         TrajectoryActionBuilder ballIntakeTrajectory2 = ballIntakeTrajectory.endTrajectory().fresh()
                 .setReversed(false)
-                .lineToY(12)
+                .lineToX(20)
                 .waitSeconds(0.1)
-                .lineToY(6)
+                .lineToX(24)
                 .waitSeconds(0.1)
-                .lineToY(0);
+                .lineToX(30);
+        TrajectoryActionBuilder Shooting1Trajectory = ballIntakeTrajectory.endTrajectory().fresh()
+                .setReversed(true)
+                .strafeToLinearHeading(new Vector2d(0, 0), Math.toRadians(0));
+        TrajectoryActionBuilder ballIntake2Trajectory = Shooting1Trajectory.endTrajectory().fresh()
+                .setReversed(false)
+                .strafeToLinearHeading(new Vector2d(40, 0), Math.toRadians(0));
+        TrajectoryActionBuilder Shooting2Trajectory = ballIntake2Trajectory.endTrajectory().fresh()
+                .setReversed(true)
+                .strafeToLinearHeading(new Vector2d(5, 0), Math.toRadians(3));
+        TrajectoryActionBuilder ParkingTrajectory = Shooting2Trajectory.endTrajectory().fresh()
+                .setReversed(false)
+                .strafeToLinearHeading(new Vector2d(20, 0), Math.toRadians(0));
 
 
 
 
-
-        Action cameraDetectionTrajectoryAction = cameraDetectionTrajectory.build();
         Action ballIntakeTrajectoryAction = ballIntakeTrajectory.build();
         Action ballIntakeTrajectory2Action = ballIntakeTrajectory2.build();
+        Action Shooting1TrajectoryAction = Shooting1Trajectory.build();
+        Action ballIntake2TrajectoryAction = ballIntake2Trajectory.build();
+        Action Shooting2TrajectoryAction = Shooting2Trajectory.build();
+        Action ParkingTrajectoryAction = ParkingTrajectory.build();
 
 
         // Preset transfer
         Actions.runBlocking(transfer.preset());
-        Actions.runBlocking(turret.right());
+        Actions.runBlocking(turret.farAutoRedPreset());
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
@@ -107,7 +119,8 @@ public class autoFarRedNew extends LinearOpMode {
                 new ParallelAction(
                         //shooter.ShooterOnFar(),
                         sorter.loadedBalls(),
-                        detector.detectWithTimeout(4)
+                        detector.detectWithTimeout(4),
+                        shooter.ShooterOn()
                 )
         );
 
@@ -134,14 +147,25 @@ public class autoFarRedNew extends LinearOpMode {
         // -------------------- STEP 3: SHOOT ONCE (TEST) --------------------
         Actions.runBlocking(
                 new SequentialAction(
-                        turret.farRightNew(),
+                        turret.right(),
                         intake.IntakeHolding(),
-                        //patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
-                        cameraDetectionTrajectoryAction,
+                        patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
                         ballIntakeTrajectoryAction,
                         new ParallelAction(
                                 sorter.intakeAndLoadThree(),
-                                ballIntakeTrajectory2Action)
+                                ballIntakeTrajectory2Action),
+                        Shooting1TrajectoryAction,
+                        intake.IntakeHolding(),
+                        patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "GPP"),
+                        new ParallelAction(
+                                sorter.intakeAndLoadThree(),
+                                ballIntake2TrajectoryAction
+                        ),
+                        Shooting2TrajectoryAction,
+                        intake.IntakeHolding(),
+                        patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
+                        ParkingTrajectoryAction
+
                 )
         );
 

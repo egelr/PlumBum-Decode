@@ -752,14 +752,10 @@ public class PatternTeleOp extends LinearOpMode {
             return 1; // Green
         }
 
-        if ((sensorColorFront.green() < sensorColorFront.blue() &&
-                gOverRFront < 1.4 && gOverBFront < 0.8)
-                || (sensorColorBack.green() < sensorColorBack.blue() &&
-                gOverBBack < 0.8 && gOverRBack < 1.4)) {
+        else{
             return 0; // Purple
         }
-
-        return -1;
+        
     }
     private void startPattern() {
         aimAtTagSnap_ExactlyLikeExample();
