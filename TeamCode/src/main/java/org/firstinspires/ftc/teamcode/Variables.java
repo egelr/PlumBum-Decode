@@ -12,7 +12,7 @@ public class Variables {
     public static final double transferDownPosition = 0.075;
     public static final double transferUpPosition = 0.22;
     public static final double shooterSpeedAuto = 0.545;
-    public static final double shooterSpeedMid = 0.56; //0.64 -> 0.56
+    public static final double shooterSpeedMid = 0.54; //0.64 -> 0.56
     public static final double shooterSpeedFar = 0.68; //0.8
 
     public static final double shooterSpeedFarAuto = 0.68;
@@ -22,9 +22,9 @@ public class Variables {
     public static double shooter_kF = 1.0;      // start at 1.0
     public static final double shooterAngleAuto = 0.26;
     public static final double shooterAngleMid = 0.25;
-    public static final double shooterAngleFar = 0.28;
+    public static final double shooterAngleFar = 0.46;
 
-    public static final double shooterAngleFarAuto = 0.28;
+    public static final double shooterAngleFarAuto = 0.31;
 
 
 

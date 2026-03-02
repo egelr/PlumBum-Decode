@@ -487,8 +487,8 @@ public class PatternTeleOp extends LinearOpMode {
         // Convert txDeg into a turret correction (EXACT)
         double turretDeg = (-txDeg) * DIR;
         int tagid = tag.getFiducialId();
-        if (tagid == 20 && far == false) turretDeg -= 4;
-        if (tagid == 24 && far == false) turretDeg += 4;
+        if (tagid == 20 && far == false) turretDeg -= 3;
+        if (tagid == 24 && far == false) turretDeg += 3;
         if (tagid == 20 && far == true) turretDeg -= 2;
         if (tagid == 24 && far == true) turretDeg += 2;
 

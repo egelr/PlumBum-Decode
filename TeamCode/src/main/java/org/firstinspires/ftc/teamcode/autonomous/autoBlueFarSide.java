@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -32,6 +33,7 @@ public class autoBlueFarSide extends LinearOpMode {
 
     // How long to scan for tags (ms)
     public static long DETECT_TIMEOUT_MS = 300;
+    private double GEAR_RATIO = 0.833;//(35/84)*2;
 
     @Override
     public void runOpMode() {
@@ -93,7 +95,7 @@ public class autoBlueFarSide extends LinearOpMode {
 
         // Preset transfer
         Actions.runBlocking(transfer.preset());
-        Actions.runBlocking(turret.farAutoRedPreset());
+        Actions.runBlocking(turret.farAutoBluePreset());
 
         // -------------------- INIT LOOP (PREVIEW) --------------------
         while (!isStarted() && !isStopRequested()) {
@@ -147,7 +149,8 @@ public class autoBlueFarSide extends LinearOpMode {
         // -------------------- STEP 3: SHOOT ONCE (TEST) --------------------
         Actions.runBlocking(
                 new SequentialAction(
-                        turret.right(),
+                        turret.leftFar(),
+                        detector.switchToAprilTagPipeline(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
                         ballIntakeTrajectoryAction,
@@ -155,6 +158,8 @@ public class autoBlueFarSide extends LinearOpMode {
                                 sorter.intakeAndLoadThree(),
                                 ballIntakeTrajectory2Action),
                         Shooting1TrajectoryAction,
+                        detector.detectAprilTagAngleWithTimeout(1.0),
+                        turret.adjust(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "GPP"),
                         new ParallelAction(
@@ -162,6 +167,8 @@ public class autoBlueFarSide extends LinearOpMode {
                                 ballIntake2TrajectoryAction
                         ),
                         Shooting2TrajectoryAction,
+                        detector.detectAprilTagAngleWithTimeout(1.0),
+                        turret.adjust(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
                         ParkingTrajectoryAction
@@ -171,7 +178,11 @@ public class autoBlueFarSide extends LinearOpMode {
 
         telemetry.addData("DONE", true);
         telemetry.addData("desired", AprilTagDetector.lastPattern);
-        telemetry.addData("tag", AprilTagDetector.lastTagId);
+        telemetry.addData("tag id", AprilTagDetector.lastTagId);
+        telemetry.addData("angle", AprilTagDetector.lastTagTxDeg);
+        double newang = AprilTagDetector.lastTagTxDeg / GEAR_RATIO / 360.0;
+        telemetry.addData("servo pos", newang);
+
         telemetry.update();
     }
 }

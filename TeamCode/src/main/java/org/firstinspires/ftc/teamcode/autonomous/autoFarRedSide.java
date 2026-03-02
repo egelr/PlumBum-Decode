@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -148,6 +149,7 @@ public class autoFarRedSide extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         turret.right(),
+                        detector.switchToAprilTagPipeline(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
                         ballIntakeTrajectoryAction,
@@ -155,6 +157,8 @@ public class autoFarRedSide extends LinearOpMode {
                                 sorter.intakeAndLoadThree(),
                                 ballIntakeTrajectory2Action),
                         Shooting1TrajectoryAction,
+                        detector.detectAprilTagAngleWithTimeout(1.0),
+                        turret.adjust(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "GPP"),
                         new ParallelAction(
@@ -162,6 +166,8 @@ public class autoFarRedSide extends LinearOpMode {
                                 ballIntake2TrajectoryAction
                         ),
                         Shooting2TrajectoryAction,
+                        detector.detectAprilTagAngleWithTimeout(1.0),
+                        turret.adjust(),
                         intake.IntakeHolding(),
                         patternShooter.shootPatternFar(AprilTagDetector.lastPattern, "PGP"),
                         ParkingTrajectoryAction

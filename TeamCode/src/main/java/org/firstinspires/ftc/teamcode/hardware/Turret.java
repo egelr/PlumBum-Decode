@@ -13,6 +13,7 @@ public class Turret {
     private Servo turretServo1, turretServo2;
     private ElapsedTime timer = new ElapsedTime();
     private boolean initialized = false;
+    private double GEAR_RATIO = 0.833;
     public Turret(HardwareMap hardwareMap) {
         turretServo1 = hardwareMap.get(Servo.class, "turretServo1");
         turretServo2 = hardwareMap.get(Servo.class, "turretServo2");
@@ -31,6 +32,19 @@ public class Turret {
     public Action left() {
         return new Turret.left();
     }
+    public class leftFar implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo1.setPosition(0.76); //1
+            turretServo2.setPosition(0.76);
+            return false;
+        }
+    }
+
+    public Action leftFar() {
+        return new Turret.leftFar();
+    }
+
     public class farLeft implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
@@ -168,8 +182,8 @@ public class Turret {
     public class farAutoRedPreset implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            turretServo1.setPosition(0.1);
-            turretServo2.setPosition(0.1);
+            turretServo1.setPosition(0.13);
+            turretServo2.setPosition(0.13);
             return false;
         }
 
@@ -177,5 +191,35 @@ public class Turret {
 
     public Action farAutoRedPreset() {
         return new Turret.farAutoRedPreset();
+    }
+    public class farAutoBluePreset implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            turretServo1.setPosition(0.87);
+            turretServo2.setPosition(0.87);
+            return false;
+        }
+
+    }
+
+    public Action farAutoBluePreset() {
+        return new Turret.farAutoBluePreset();
+    }
+    public class adjust implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            double servoDeg = AprilTagDetector.lastTagTxDeg / GEAR_RATIO / 360.0;
+
+            // 360° servo: degrees -> position 0..1 (EXACT)
+            double servoPos = turretServo1.getPosition() + servoDeg;
+
+            turretServo1.setPosition(servoPos);
+            turretServo2.setPosition(servoPos);
+            return false;
+        }
+    }
+
+    public Action adjust() {
+        return new Turret.adjust();
     }
 }
