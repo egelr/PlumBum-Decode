@@ -72,7 +72,7 @@ public class PatternTeleOp extends LinearOpMode {
     private static final long KICKER_STABLE_MS = 25;
     private static final long KICKER_MIN_DOWN_MS = 70;
 
-    private static final double OUTTAKE_INTAKE_POWER = 0.4;
+    private static final double OUTTAKE_INTAKE_POWER = 0.6;
     private boolean intakeWasEnabledBeforeShootAll = false;
 
     // ----------------------------- SENSORS -----------------------------
